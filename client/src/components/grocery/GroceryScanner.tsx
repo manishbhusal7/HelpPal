@@ -1,299 +1,317 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  CardDescription 
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { format, addDays } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
-// Demo grocery data
-const GROCERY_ALTERNATIVES = {
-  "Tide Detergent": { name: "Kirkland Signature Detergent", price: 8.99, originalPrice: 15.99, savings: 7 },
-  "Cheerios": { name: "Great Value Os Cereal", price: 2.49, originalPrice: 4.99, savings: 2.5 },
-  "Bounty Paper Towels": { name: "Kirkland Paper Towels", price: 14.99, originalPrice: 21.99, savings: 7 },
-  "Heinz Ketchup": { name: "Great Value Ketchup", price: 1.99, originalPrice: 3.49, savings: 1.5 },
-  "Nutella": { name: "Great Value Hazelnut Spread", price: 2.99, originalPrice: 4.99, savings: 2 },
-};
+// Sample grocery items database with alternative suggestions and price comparisons
+const groceryDatabase = [
+  {
+    id: 1,
+    name: "Organic Bananas",
+    price: 4.99,
+    alternatives: [
+      { id: 101, name: "Regular Bananas", price: 2.99, savings: 40 },
+      { id: 102, name: "Frozen Bananas", price: 3.49, savings: 30 }
+    ]
+  },
+  {
+    id: 2,
+    name: "Almond Milk",
+    price: 5.99,
+    alternatives: [
+      { id: 201, name: "Store Brand Almond Milk", price: 3.99, savings: 33 },
+      { id: 202, name: "Soy Milk", price: 4.49, savings: 25 }
+    ]
+  },
+  {
+    id: 3,
+    name: "Free Range Eggs",
+    price: 6.99,
+    alternatives: [
+      { id: 301, name: "Regular Eggs", price: 3.99, savings: 43 },
+      { id: 302, name: "Store Brand Cage-Free Eggs", price: 5.49, savings: 21 }
+    ]
+  },
+  {
+    id: 4,
+    name: "Organic Spinach",
+    price: 4.99,
+    alternatives: [
+      { id: 401, name: "Regular Spinach", price: 2.99, savings: 40 },
+      { id: 402, name: "Frozen Spinach", price: 1.99, savings: 60 }
+    ]
+  },
+  {
+    id: 5,
+    name: "Premium Coffee Beans",
+    price: 14.99,
+    alternatives: [
+      { id: 501, name: "Store Brand Coffee", price: 8.99, savings: 40 },
+      { id: 502, name: "Coffee Grounds", price: 9.99, savings: 33 }
+    ]
+  }
+];
 
-// Demo inventory prediction data
-const INVENTORY_PREDICTIONS = [
-  { 
-    item: "Eggs", 
-    lastPurchase: "2025-03-10", 
-    purchaseFrequency: 14, 
-    daysRemaining: 2,
-    urgency: "high"
-  },
-  { 
-    item: "Milk", 
-    lastPurchase: "2025-03-15", 
-    purchaseFrequency: 7, 
-    daysRemaining: 1,
-    urgency: "high"
-  },
-  { 
-    item: "Bread", 
-    lastPurchase: "2025-03-18", 
-    purchaseFrequency: 5, 
-    daysRemaining: 3,
-    urgency: "medium"
-  },
-  { 
-    item: "Bananas", 
-    lastPurchase: "2025-03-18", 
-    purchaseFrequency: 7, 
-    daysRemaining: 4,
-    urgency: "medium"
-  },
-  { 
-    item: "Coffee", 
-    lastPurchase: "2025-03-01", 
-    purchaseFrequency: 30, 
-    daysRemaining: 8,
-    urgency: "low"
-  },
+// Sample purchase history to suggest restock items
+const purchaseHistory = [
+  { id: 1, name: "Milk", lastPurchase: "2 weeks ago", suggestRestock: true },
+  { id: 2, name: "Bread", lastPurchase: "1 week ago", suggestRestock: false },
+  { id: 3, name: "Eggs", lastPurchase: "3 weeks ago", suggestRestock: true },
+  { id: 4, name: "Coffee", lastPurchase: "1 month ago", suggestRestock: true },
+  { id: 5, name: "Flour", lastPurchase: "2 months ago", suggestRestock: false }
 ];
 
 export default function GroceryScanner() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [scannedProduct, setScannedProduct] = useState<string | null>(null);
-  const [shoppingList, setShoppingList] = useState<string[]>([]);
-  
-  // "Scan" a product by searching for it
+  const [scannedItems, setScannedItems] = useState<any[]>([]);
+  const [selectedAlternatives, setSelectedAlternatives] = useState<any[]>([]);
+  const { toast } = useToast();
+
   const handleSearch = () => {
     if (searchTerm.trim() === "") return;
     
-    // Simulate finding a match in our demo data
-    const normalizedSearch = searchTerm.toLowerCase();
-    const product = Object.keys(GROCERY_ALTERNATIVES).find(
-      key => key.toLowerCase().includes(normalizedSearch)
+    // Find item in our mock database
+    const foundItem = groceryDatabase.find(
+      item => item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
-    if (product) {
-      setScannedProduct(product);
+    if (foundItem) {
+      // Check if already in scanned items
+      if (!scannedItems.some(item => item.id === foundItem.id)) {
+        setScannedItems([...scannedItems, foundItem]);
+        toast({
+          title: "Item Added",
+          description: `${foundItem.name} has been added to your list.`,
+        });
+      } else {
+        toast({
+          title: "Item Already Added",
+          description: `${foundItem.name} is already in your list.`,
+          variant: "destructive"
+        });
+      }
     } else {
-      setScannedProduct("No alternatives found");
+      toast({
+        title: "Item Not Found",
+        description: "Sorry, we couldn't find that grocery item.",
+        variant: "destructive"
+      });
     }
     
-    // Clear search
     setSearchTerm("");
   };
-  
-  const handleAddToList = (item: string) => {
-    if (!shoppingList.includes(item)) {
-      setShoppingList([...shoppingList, item]);
-    }
-  };
-  
-  const handleRemoveFromList = (item: string) => {
-    setShoppingList(shoppingList.filter(i => i !== item));
-  };
-  
-  const getUrgencyBadge = (urgency: string) => {
-    switch (urgency) {
-      case "high":
-        return <Badge variant="outline" className="bg-red-50 text-red-500 border-red-200">Running Out</Badge>;
-      case "medium":
-        return <Badge variant="outline" className="bg-amber-50 text-amber-500 border-amber-200">Low Stock</Badge>;
-      default:
-        return <Badge variant="outline" className="bg-blue-50 text-blue-500 border-blue-200">Plan Ahead</Badge>;
-    }
+
+  const selectAlternative = (original: any, alternative: any) => {
+    setSelectedAlternatives([
+      ...selectedAlternatives.filter(item => item.originalId !== original.id), 
+      { originalId: original.id, alternative }
+    ]);
+    
+    toast({
+      title: "Savings Applied",
+      description: `Switched to ${alternative.name} and saved $${(original.price - alternative.price).toFixed(2)}!`,
+    });
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, 'MMM d');
+  const isAlternativeSelected = (originalId: number, alternativeId: number) => {
+    const selection = selectedAlternatives.find(item => item.originalId === originalId);
+    return selection && selection.alternative.id === alternativeId;
   };
   
-  const getPredictedPurchaseDate = (lastPurchase: string, frequency: number) => {
-    const date = new Date(lastPurchase);
-    return format(addDays(date, frequency), 'MMM d');
+  const calculateTotalSavings = () => {
+    return selectedAlternatives.reduce((total, item) => {
+      const originalItem = groceryDatabase.find(g => g.id === item.originalId);
+      if (originalItem) {
+        return total + (originalItem.price - item.alternative.price);
+      }
+      return total;
+    }, 0);
+  };
+
+  const calculateOriginalTotal = () => {
+    return scannedItems.reduce((total, item) => total + item.price, 0);
   };
   
+  const calculateFinalTotal = () => {
+    return scannedItems.reduce((total, item) => {
+      const alternative = selectedAlternatives.find(alt => alt.originalId === item.id);
+      if (alternative) {
+        return total + alternative.alternative.price;
+      }
+      return total + item.price;
+    }, 0);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center">
-            <span className="material-icons text-primary-500 mr-2">photo_camera</span>
-            Smart Grocery Scanner
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle>Smart Grocery Scanner</CardTitle>
           <CardDescription>
-            Scan products to find cheaper alternatives and save money
+            Find better deals on your grocery shopping and track when it's time to restock
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="scanner">
-            <TabsList className="mb-4">
-              <TabsTrigger value="scanner">Product Scanner</TabsTrigger>
-              <TabsTrigger value="predictions">Smart Restocking</TabsTrigger>
-              <TabsTrigger value="list">Shopping List ({shoppingList.length})</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="scanner" className="space-y-4">
-              <div className="flex space-x-2">
-                <Input
-                  placeholder="Search for a product (try 'Tide', 'Cheerios', etc.)"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1"
-                />
-                <Button onClick={handleSearch}>
-                  <span className="material-icons mr-1">search</span>
-                  Scan
-                </Button>
-              </div>
+          <div className="mb-4 flex space-x-2">
+            <Input
+              className="flex-1"
+              placeholder="Search for grocery items (try 'Organic Bananas', 'Almond Milk')"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearch();
+              }}
+            />
+            <Button onClick={handleSearch}>Add Item</Button>
+          </div>
+          
+          {/* Shopping List */}
+          {scannedItems.length > 0 ? (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Shopping List ({scannedItems.length} items)</h3>
               
-              {scannedProduct && scannedProduct !== "No alternatives found" && (
-                <div className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-neutral-900">{scannedProduct}</h3>
-                      <p className="text-sm text-neutral-500">Premium Brand</p>
-                      <p className="text-sm font-semibold mt-1">${GROCERY_ALTERNATIVES[scannedProduct as keyof typeof GROCERY_ALTERNATIVES].originalPrice.toFixed(2)}</p>
-                    </div>
-                    <div className="w-16 h-16 bg-neutral-100 rounded flex items-center justify-center">
-                      <span className="material-icons text-neutral-400">shopping_bag</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-dashed border-neutral-200">
-                    <div className="flex items-center">
-                      <span className="material-icons text-success-500 mr-2">trending_down</span>
-                      <h3 className="font-medium text-success-600">Suggested Alternative</h3>
-                    </div>
-                    
-                    <div className="mt-2 flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-neutral-900">{GROCERY_ALTERNATIVES[scannedProduct as keyof typeof GROCERY_ALTERNATIVES].name}</h3>
-                        <p className="text-sm text-neutral-500">Store Brand</p>
-                        <p className="text-sm font-semibold mt-1 text-success-600">${GROCERY_ALTERNATIVES[scannedProduct as keyof typeof GROCERY_ALTERNATIVES].price.toFixed(2)}</p>
-                      </div>
-                      <div className="bg-success-50 px-3 py-2 rounded-full">
-                        <p className="text-success-600 font-semibold text-sm">Save ${GROCERY_ALTERNATIVES[scannedProduct as keyof typeof GROCERY_ALTERNATIVES].savings.toFixed(2)}</p>
-                      </div>
-                    </div>
-                    
-                    <Button onClick={() => handleAddToList(GROCERY_ALTERNATIVES[scannedProduct as keyof typeof GROCERY_ALTERNATIVES].name)} className="w-full mt-3">
-                      Add to Shopping List
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {scannedProduct === "No alternatives found" && (
-                <div className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm">
-                  <div className="flex items-center justify-center flex-col py-6">
-                    <span className="material-icons text-neutral-300 text-5xl mb-2">search_off</span>
-                    <h3 className="font-medium text-neutral-700">No alternatives found</h3>
-                    <p className="text-sm text-neutral-500">Try searching for another product</p>
-                  </div>
-                </div>
-              )}
-              
-              <div className="bg-primary-50 p-4 rounded-lg border border-primary-100">
-                <div className="flex items-start">
-                  <span className="material-icons text-primary-500 mr-2">tips_and_updates</span>
-                  <div>
-                    <h3 className="text-sm font-medium text-primary-800">Shopping Tip</h3>
-                    <p className="text-xs text-primary-700">Store brands often have the same quality as name brands but cost 20-40% less. Many are made in the same factories as premium brands!</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="predictions" className="space-y-4">
-              <div className="bg-white p-4 rounded-lg border border-neutral-200">
-                <h3 className="font-medium text-neutral-900 mb-4">Smart Restocking Suggestions</h3>
+              {scannedItems.map((item) => {
+                const isAltSelected = selectedAlternatives.some(alt => alt.originalId === item.id);
+                const selectedAlt = selectedAlternatives.find(alt => alt.originalId === item.id)?.alternative;
                 
-                <div className="space-y-4">
-                  {INVENTORY_PREDICTIONS.map((item) => (
-                    <div key={item.item} className="flex justify-between items-center border-b border-neutral-100 pb-3 last:border-0 last:pb-0">
+                return (
+                  <Card key={item.id} className="p-4 border border-neutral-200">
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <div className="flex items-center">
-                          <h4 className="font-medium text-neutral-800">{item.item}</h4>
-                          <div className="ml-2">
-                            {getUrgencyBadge(item.urgency)}
+                        <h4 className="font-medium">{item.name}</h4>
+                        {isAltSelected ? (
+                          <div className="text-sm line-through text-neutral-500">
+                            ${item.price.toFixed(2)}
                           </div>
-                        </div>
-                        <p className="text-xs text-neutral-500 mt-1">
-                          Last bought: {formatDate(item.lastPurchase)} • Usually lasts {item.purchaseFrequency} days
-                        </p>
+                        ) : (
+                          <div className="text-sm font-semibold">
+                            ${item.price.toFixed(2)}
+                          </div>
+                        )}
+                        
+                        {isAltSelected && (
+                          <div className="flex items-center mt-1">
+                            <span className="font-semibold text-primary-600">
+                              ${selectedAlt.price.toFixed(2)}
+                            </span>
+                            <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-100" variant="outline">
+                              Save {selectedAlt.savings}%
+                            </Badge>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center">
-                        <div className="mr-3 text-right">
-                          <p className="text-xs text-neutral-500">Running out in:</p>
-                          <p className="text-sm font-semibold text-neutral-800">{item.daysRemaining} days</p>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="h-8"
-                          onClick={() => handleAddToList(item.item)}
-                        >
-                          <span className="material-icons text-sm mr-1">add</span>
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="bg-primary-50 p-4 rounded-lg border border-primary-100">
-                <div className="flex items-start">
-                  <span className="material-icons text-primary-500 mr-2">lightbulb</span>
-                  <div>
-                    <h3 className="text-sm font-medium text-primary-800">How This Works</h3>
-                    <p className="text-xs text-primary-700">These suggestions are based on your previous shopping patterns. We analyze when you typically purchase items and predict when you might run out.</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="list">
-              <div className="bg-white rounded-lg border border-neutral-200">
-                {shoppingList.length > 0 ? (
-                  <div>
-                    <ul className="divide-y divide-neutral-100">
-                      {shoppingList.map((item, index) => (
-                        <li key={index} className="flex justify-between items-center p-3">
-                          <span>{item}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleRemoveFromList(item)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <span className="material-icons text-neutral-500">close</span>
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    <div className="p-4 border-t border-neutral-100">
-                      <Button className="w-full">
-                        <span className="material-icons mr-1">shopping_cart</span>
-                        Prepare for Shopping
+                      
+                      <Button 
+                        variant="ghost" 
+                        className="h-8 px-2"
+                        onClick={() => {
+                          setScannedItems(scannedItems.filter(i => i.id !== item.id));
+                          setSelectedAlternatives(selectedAlternatives.filter(a => a.originalId !== item.id));
+                        }}
+                      >
+                        <span className="material-icons text-neutral-500">delete</span>
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-8">
-                    <span className="material-icons text-neutral-300 text-5xl mb-2">shopping_cart</span>
-                    <h3 className="font-medium text-neutral-700">Your shopping list is empty</h3>
-                    <p className="text-sm text-neutral-500 mt-1">Scan products or add items from the suggestions</p>
-                  </div>
-                )}
+                    
+                    {item.alternatives && item.alternatives.length > 0 && (
+                      <div className="mt-2 pl-4 border-l-2 border-primary-100 space-y-2">
+                        <div className="text-sm font-medium text-primary-700">Alternatives</div>
+                        {item.alternatives.map((alt: any) => (
+                          <div key={alt.id} className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <span className="text-sm">{alt.name}</span>
+                              <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-100" variant="outline">
+                                Save {alt.savings}%
+                              </Badge>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-medium">${alt.price.toFixed(2)}</span>
+                              <Button 
+                                size="sm" 
+                                variant={isAlternativeSelected(item.id, alt.id) ? "default" : "outline"}
+                                className="h-7 px-2 text-xs"
+                                onClick={() => selectAlternative(item, alt)}
+                              >
+                                {isAlternativeSelected(item.id, alt.id) ? "Selected" : "Select"}
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+              
+              {/* Summary */}
+              <div className="pt-4 mt-4 border-t border-neutral-200">
+                <div className="flex justify-between mb-2">
+                  <span className="text-neutral-600">Original Total:</span>
+                  <span>${calculateOriginalTotal().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-green-600 font-medium">Total Savings:</span>
+                  <span className="text-green-600 font-medium">-${calculateTotalSavings().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Final Total:</span>
+                  <span>${calculateFinalTotal().toFixed(2)}</span>
+                </div>
               </div>
-            </TabsContent>
-          </Tabs>
+
+              <div className="flex justify-end">
+                <Button className="mt-4">
+                  <span className="material-icons mr-2">shopping_cart</span>
+                  Checkout
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="material-icons text-4xl text-neutral-300 mb-2">shopping_cart</div>
+              <h3 className="text-lg font-medium text-neutral-500">Your shopping list is empty</h3>
+              <p className="text-neutral-400 mt-1">Search for items to add them to your list</p>
+            </div>
+          )}
         </CardContent>
-        <CardFooter className="border-t border-neutral-100 pt-4">
-          <div className="text-xs text-neutral-500">
-            Note: In a real implementation, you would be able to scan barcodes or take photos of products using your device's camera. This demo uses text search for demonstration purposes.
+      </Card>
+      
+      {/* Suggested Restock Items */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Suggested Restock Items</CardTitle>
+          <CardDescription>
+            Based on your purchase history, you might need these items
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {purchaseHistory
+              .filter(item => item.suggestRestock)
+              .map(item => (
+                <div key={item.id} className="flex justify-between items-center p-3 bg-neutral-50 rounded-md">
+                  <div className="flex items-center">
+                    <span className="material-icons text-amber-500 mr-2">history</span>
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-xs text-neutral-500">Last purchased: {item.lastPurchase}</div>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-8">
+                    Add to List
+                  </Button>
+                </div>
+              ))}
           </div>
-        </CardFooter>
+        </CardContent>
       </Card>
     </div>
   );
