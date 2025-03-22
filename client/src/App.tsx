@@ -13,6 +13,7 @@ import CreditScore from "@/pages/CreditScore";
 import Accounts from "@/pages/Accounts";
 import Simulator from "@/pages/Simulator";
 import Alerts from "@/pages/Alerts";
+import Tools from "@/pages/Tools";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
@@ -68,6 +69,8 @@ function AppContent() {
         return "Simulator";
       case "/alerts":
         return "Alerts";
+      case "/tools":
+        return "Financial Tools";
       case "/settings":
         return "Settings";
       default:
@@ -93,6 +96,7 @@ function AppContent() {
             <Route path="/accounts" component={() => <Accounts userId={user?.id} />} />
             <Route path="/simulator" component={() => <Simulator userId={user?.id} />} />
             <Route path="/alerts" component={() => <Alerts userId={user?.id} />} />
+            <Route path="/tools" component={() => <Tools userId={user?.id} />} />
             <Route path="/settings" component={() => <Settings userId={user?.id} />} />
             <Route component={NotFound} />
           </Switch>

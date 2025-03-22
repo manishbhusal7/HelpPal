@@ -14,6 +14,7 @@ export default function Sidebar({ isOpen, setIsOpen, user }: SidebarProps) {
     { path: "/credit-score", label: "Credit Score", icon: "credit_score" },
     { path: "/accounts", label: "Accounts", icon: "account_balance" },
     { path: "/simulator", label: "Simulator", icon: "trending_up" },
+    { path: "/tools", label: "Tools", icon: "build" },
     { path: "/alerts", label: "Alerts", icon: "notifications" },
     { path: "/settings", label: "Settings", icon: "settings" }
   ];

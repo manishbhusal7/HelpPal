@@ -90,9 +90,8 @@ export default function CreditUtilizationCard({ userId }: CreditUtilizationCardP
         </div>
         <div className="w-full h-2 bg-neutral-100 rounded-full mb-6">
           <div 
-            className={getBarColor(utilization.overall)} 
+            className={`${getBarColor(utilization.overall)} h-2 rounded-full`} 
             style={{ width: `${utilization.overall}%` }}
-            className="h-2 rounded-full"
           ></div>
         </div>
         
@@ -107,9 +106,8 @@ export default function CreditUtilizationCard({ userId }: CreditUtilizationCardP
             </div>
             <div className="w-full h-2 bg-neutral-100 rounded-full">
               <div 
-                className={getBarColor(card.utilization)}
+                className={`${getBarColor(card.utilization)} h-2 rounded-full`}
                 style={{ width: `${card.utilization}%` }}
-                className="h-2 rounded-full"
               ></div>
             </div>
           </div>
