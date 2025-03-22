@@ -22,26 +22,26 @@ function AppContent() {
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
-  
+
   // For simplicity, we'll auto-login to the demo user
   useEffect(() => {
     const loginUser = async () => {
       try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
+        const response = await fetch("/api/login", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username: 'johndoe',
-            password: 'password123'
+            username: "johndoe",
+            password: "password123",
           }),
         });
-        
+
         if (!response.ok) {
-          throw new Error('Failed to login');
+          throw new Error("Failed to login");
         }
-        
+
         const userData = await response.json();
         setUser(userData);
       } catch (error) {
@@ -52,7 +52,7 @@ function AppContent() {
         });
       }
     };
-    
+
     loginUser();
   }, [toast]);
 
@@ -69,7 +69,7 @@ function AppContent() {
         return "Simulator";
       case "/alerts":
         return "Alerts";
-      case "/tools":
+      case "/Scan":
         return "Financial Tools";
       case "/settings":
         return "Settings";
@@ -80,24 +80,46 @@ function AppContent() {
 
   return (
     <div className="flex h-screen">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} user={user} />
-      
+      <Sidebar
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
+        user={user}
+      />
+
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar 
-          title={getPageTitle()} 
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+        <Topbar
+          title={getPageTitle()}
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           user={user}
         />
-        
+
         <main className="flex-1 overflow-y-auto bg-neutral-50 p-4 sm:p-6 lg:p-8">
           <Switch>
             <Route path="/" component={() => <Dashboard userId={user?.id} />} />
-            <Route path="/credit-score" component={() => <CreditScore userId={user?.id} />} />
-            <Route path="/accounts" component={() => <Accounts userId={user?.id} />} />
-            <Route path="/simulator" component={() => <Simulator userId={user?.id} />} />
-            <Route path="/alerts" component={() => <Alerts userId={user?.id} />} />
-            <Route path="/tools" component={() => <Tools userId={user?.id} />} />
-            <Route path="/settings" component={() => <Settings userId={user?.id} />} />
+            <Route
+              path="/credit-score"
+              component={() => <CreditScore userId={user?.id} />}
+            />
+            <Route
+              path="/accounts"
+              component={() => <Accounts userId={user?.id} />}
+            />
+            <Route
+              path="/simulator"
+              component={() => <Simulator userId={user?.id} />}
+            />
+            <Route
+              path="/alerts"
+              component={() => <Alerts userId={user?.id} />}
+            />
+            <Route
+              path="/tools"
+              component={() => <Tools userId={user?.id} />}
+            />
+            <Route
+              path="/settings"
+              component={() => <Settings userId={user?.id} />}
+            />
             <Route component={NotFound} />
           </Switch>
         </main>
