@@ -81,11 +81,11 @@ export class MemStorage implements IStorage {
     // Create demo user
     const demoUser: User = {
       id: this.userId++,
-      username: "alexsmith",
+      username: "alexthompson",
       password: "password123", // In a real app, this would be hashed
-      name: "Alex Smith",
+      name: "Alex Thompson",
       email: "alex@example.com",
-      avatarInitials: "AS",
+      avatarInitials: "AT",
       creditScore: 736,
       creditScoreStatus: "good",
       createdAt: new Date()
@@ -253,7 +253,13 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userId++;
-    const user: User = { ...insertUser, id, createdAt: new Date() };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      createdAt: new Date(),
+      creditScore: insertUser.creditScore || null,
+      creditScoreStatus: insertUser.creditScoreStatus || null
+    };
     this.users.set(id, user);
     return user;
   }
@@ -288,7 +294,11 @@ export class MemStorage implements IStorage {
 
   async createCreditCard(insertCard: InsertCreditCard): Promise<CreditCard> {
     const id = this.creditCardId++;
-    const card: CreditCard = { ...insertCard, id };
+    const card: CreditCard = { 
+      ...insertCard, 
+      id,
+      isConnected: insertCard.isConnected || null
+    };
     this.creditCards.set(id, card);
     return card;
   }

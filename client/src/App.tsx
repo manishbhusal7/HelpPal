@@ -21,7 +21,7 @@ function AppContent() {
   const [location] = useLocation();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
 
   // For simplicity, we'll auto-login to the demo user
   useEffect(() => {
@@ -33,7 +33,7 @@ function AppContent() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username: "johndoe",
+            username: "alexthompson",
             password: "password123",
           }),
         });
