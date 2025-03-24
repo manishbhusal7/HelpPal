@@ -81,12 +81,12 @@ export class MemStorage implements IStorage {
     // Create demo user
     const demoUser: User = {
       id: this.userId++,
-      username: "johndoe",
+      username: "alexsmith",
       password: "password123", // In a real app, this would be hashed
-      name: "John Doe",
-      email: "john@example.com",
-      avatarInitials: "JD",
-      creditScore: 710,
+      name: "Alex Smith",
+      email: "alex@example.com",
+      avatarInitials: "AS",
+      creditScore: 736,
       creditScoreStatus: "good",
       createdAt: new Date()
     };
@@ -96,10 +96,10 @@ export class MemStorage implements IStorage {
     const visaCard: CreditCard = {
       id: this.creditCardId++,
       userId: demoUser.id,
-      name: "Visa Platinum",
-      balance: 4500,
-      limit: 10000,
-      utilization: 45,
+      name: "Visa Signature",
+      balance: 2500,
+      limit: 5000,
+      utilization: 50,
       isConnected: true
     };
     this.creditCards.set(visaCard.id, visaCard);
@@ -107,10 +107,10 @@ export class MemStorage implements IStorage {
     const amexCard: CreditCard = {
       id: this.creditCardId++,
       userId: demoUser.id,
-      name: "Amex Gold",
-      balance: 1000,
-      limit: 5000,
-      utilization: 20,
+      name: "Chase Freedom",
+      balance: 1800,
+      limit: 4000,
+      utilization: 45,
       isConnected: true
     };
     this.creditCards.set(amexCard.id, amexCard);
@@ -146,23 +146,28 @@ export class MemStorage implements IStorage {
     // Create notifications
     const notifications = [
       {
-        message: "Your credit utilization increased by 5% this month",
+        message: "Hi Alex, let's start improving your financial health!",
+        type: "info",
+        createdAt: new Date(Date.now() - 15 * 60 * 1000) // 15 minutes ago
+      },
+      {
+        message: "You're using 50% of your credit - that's above the recommended usage",
         type: "warning",
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
+        createdAt: new Date(Date.now() - 10 * 60 * 1000) // 10 minutes ago
       },
       {
-        message: "Your credit score increased by 15 points",
+        message: "You saved $15 on groceries last week with smart swaps - great job!",
         type: "success",
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // Yesterday
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
       },
       {
-        message: "You've successfully linked a new account",
+        message: "Your weekly spending report is ready to view",
         type: "info",
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
       },
       {
-        message: "Your monthly credit report is available",
-        type: "info",
+        message: "You've successfully connected all your bank accounts",
+        type: "success",
         createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 1 week ago
       }
     ];
@@ -182,22 +187,28 @@ export class MemStorage implements IStorage {
     // Create action items
     const actionItems = [
       {
-        title: "Reduce Credit Card Utilization",
-        description: "Your Visa card utilization is above 30%. Consider paying down $450 to get below this threshold.",
+        title: "Pay $300 to Your Visa Card",
+        description: "Paying $300 will lower your utilization to ~35% and could boost your score by ~20 points next month!",
         type: "warning",
-        actionButton: "Take Action"
+        actionButton: "Schedule Payment"
       },
       {
-        title: "Maintain Payment History",
-        description: "You've made all payments on time for 6 months. Keep it up to continue improving your score.",
-        type: "success",
-        actionButton: "View Details"
-      },
-      {
-        title: "Consider a Balance Transfer",
-        description: "You might save on interest by transferring your high-interest debt to a card with a lower rate.",
+        title: "Scan Grocery Receipts",
+        description: "Use our grocery scanner to find cheaper alternatives and save on your next shopping trip.",
         type: "info",
-        actionButton: "Explore Options"
+        actionButton: "Open Scanner"
+      },
+      {
+        title: "Try 'What-If' Simulator",
+        description: "See how paying off $1000 over the next 3 months could improve your credit score.",
+        type: "info",
+        actionButton: "Try Simulator"
+      },
+      {
+        title: "Weekly Savings Goal",
+        description: "You've saved $15 so far this week. Try to reach your goal of $25 by finding more savings opportunities.",
+        type: "success",
+        actionButton: "Find Savings"
       }
     ];
 
@@ -219,11 +230,11 @@ export class MemStorage implements IStorage {
     const simulation: Simulation = {
       id: this.simulationId++,
       userId: demoUser.id,
-      baseScore: 710,
-      potentialScore: 735,
-      payDownDebt: 0,
+      baseScore: 736,
+      potentialScore: 771,
+      payDownDebt: 1000,
       newCreditCard: false,
-      onTimePayments: 6,
+      onTimePayments: 3,
       createdAt: new Date()
     };
     this.simulations.set(simulation.id, simulation);
