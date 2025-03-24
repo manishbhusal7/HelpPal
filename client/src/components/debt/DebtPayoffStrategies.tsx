@@ -27,43 +27,43 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 
-// Sample debt data
+// Alex Thompson's debt data
 const initialDebtItems = [
   { 
     id: 1, 
-    name: "Credit Card A", 
-    balance: 5000, 
-    interestRate: 19.99, 
-    minPayment: 120, 
+    name: "Visa Signature", 
+    balance: 4750, 
+    interestRate: 17.99, 
+    minPayment: 115, 
+    selected: true,
+    company: "Wells Fargo"
+  },
+  { 
+    id: 2, 
+    name: "Chase Freedom", 
+    balance: 2980, 
+    interestRate: 18.49, 
+    minPayment: 85, 
     selected: true,
     company: "Chase"
   },
   { 
-    id: 2, 
-    name: "Credit Card B", 
-    balance: 2500, 
-    interestRate: 21.99, 
-    minPayment: 75, 
-    selected: true,
-    company: "Bank of America"
-  },
-  { 
     id: 3, 
     name: "Auto Loan", 
-    balance: 12000, 
-    interestRate: 6.5, 
-    minPayment: 345, 
+    balance: 11500, 
+    interestRate: 5.75, 
+    minPayment: 315, 
     selected: true,
-    company: "Toyota Financial"
+    company: "Honda Financial"
   },
   { 
     id: 4, 
-    name: "Personal Loan", 
-    balance: 8000, 
-    interestRate: 10.75, 
-    minPayment: 230, 
+    name: "Student Loan", 
+    balance: 22300, 
+    interestRate: 4.25, 
+    minPayment: 265, 
     selected: true,
-    company: "SoFi"
+    company: "Nelnet"
   }
 ];
 

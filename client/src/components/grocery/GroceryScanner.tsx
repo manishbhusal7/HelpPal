@@ -200,7 +200,7 @@ const purchaseHistory = [
   }
 ];
 
-// Weekly savings stats
+// Weekly savings stats - Alex's progress
 const weeklySavings = {
   total: 15.42,
   groceries: 9.87,
@@ -208,10 +208,15 @@ const weeklySavings = {
   personal: 2.30,
   appliedToDebt: 10.00,
   remaining: 5.42,
+  targetWeeklyGoal: 25.00,
   savingsHistory: [
     { week: 'Mar 1-7', amount: 12.50 },
     { week: 'Mar 8-14', amount: 8.75 },
     { week: 'Mar 15-21', amount: 15.42 }
+  ],
+  savingsAppliedToCards: [
+    { card: "Visa Signature", amount: 6.50, date: "Mar 15, 2025" },
+    { card: "Chase Freedom", amount: 3.50, date: "Mar 15, 2025" }
   ]
 };
 
@@ -367,11 +372,22 @@ export default function GroceryScanner() {
   };
 
   const applySavingsToDebt = () => {
+    // Personalized for Alex's credit cards
     toast({
-      title: "Savings Applied to Debt",
-      description: `$${weeklySavings.remaining.toFixed(2)} has been applied to your credit card balance.`,
+      title: "Savings Applied to Credit Cards",
+      description: `$${weeklySavings.remaining.toFixed(2)} has been applied to your Visa Signature ($3.25) and Chase Freedom ($2.17) cards.`,
       variant: "default"
     });
+    
+    // Show follow-up toast about progress toward weekly goal
+    setTimeout(() => {
+      const percentComplete = (weeklySavings.total / weeklySavings.targetWeeklyGoal) * 100;
+      toast({
+        title: `${percentComplete.toFixed(0)}% to Weekly Goal`,
+        description: `You've saved $${weeklySavings.total.toFixed(2)} toward your weekly goal of $${weeklySavings.targetWeeklyGoal.toFixed(2)}. Keep going!`,
+        variant: "default"
+      });
+    }, 1500);
   };
 
   return (
