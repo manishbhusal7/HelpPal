@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface ActionItemsProps {
   userId: number | undefined;
@@ -12,6 +13,15 @@ export default function ActionItems({ userId }: ActionItemsProps) {
   const { toast } = useToast();
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showChatbox, setShowChatbox] = useState(false);
+  const [userMessage, setUserMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState<Array<{type: 'user' | 'ai', text: string}>>([
+    {
+      type: 'ai',
+      text: "Hello Alex! I'm your CreditGuardian AI assistant. I've analyzed your financial data and I'm ready to help you improve your credit score. How can I assist you today?"
+    }
+  ]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   
   const { data: actionItems = [], isLoading } = useQuery<any[]>({
     queryKey: [`/api/users/${userId}/action-items`],
@@ -37,6 +47,92 @@ export default function ActionItems({ userId }: ActionItemsProps) {
       });
     }
   });
+
+  // Scroll to the bottom of the chat container when messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  // Handle sending a message in the chatbox
+  const handleSendMessage = () => {
+    if (!userMessage.trim()) return;
+    
+    // Add user message to chat
+    setChatMessages(prev => [...prev, { type: 'user', text: userMessage }]);
+    
+    // Clear input field
+    setUserMessage("");
+    
+    // Simulate AI thinking with a loading message
+    setTimeout(() => {
+      generateAIResponse(userMessage);
+    }, 800);
+  };
+  
+  // Generate an AI response based on the user message
+  const generateAIResponse = (message: string) => {
+    const lowerMessage = message.toLowerCase();
+    let response = "";
+    
+    // Personalized responses based on common credit score questions
+    if (lowerMessage.includes("improve") && lowerMessage.includes("credit")) {
+      response = "Based on your financial data, I recommend these 3 key actions to improve your credit score:\n\n" +
+        "1. Reduce your Visa Signature card utilization from 73% to under 30%. This could add 15-25 points to your score within 60 days.\n\n" +
+        "2. Continue your perfect payment record. Your consistent on-time payments have already added 12 points over the last 6 months.\n\n" +
+        "3. Maintain your older accounts. Your Chase Freedom card is your oldest account at 3.2 years and contributes positively to your credit history length.";
+    } 
+    else if (lowerMessage.includes("utilization") || (lowerMessage.includes("credit") && lowerMessage.includes("card"))) {
+      response = "Your current credit utilization is 48% overall, which is in the 'moderate risk' category.\n\n" +
+        "Card breakdown:\n" +
+        "• Visa Signature: 73% utilized ($4,750 of $6,500 limit) - HIGH\n" +
+        "• Chase Freedom: 23% utilized ($2,980 of $13,000 limit) - GOOD\n\n" +
+        "Recommendation: Transfer at least $2,800 from your Visa Signature to your Chase Freedom card to balance utilization rates. This could improve your score by 15-25 points in the next statement cycle.";
+    }
+    else if (lowerMessage.includes("dining") || lowerMessage.includes("restaurant") || lowerMessage.includes("spending")) {
+      response = "I've noticed your dining/restaurant spending has increased 22% in the last 30 days compared to your 3-month average.\n\n" +
+        "Recent transactions include:\n" +
+        "• Mar 18: Cheesecake Factory - $78.45\n" +
+        "• Mar 15: Starbucks (3 visits) - $16.85\n" +
+        "• Mar 10: Local Bistro - $124.30\n\n" +
+        "This increased spending is directly affecting your Visa Signature card utilization. Consider using your Chase Freedom card for dining in the next 30 days to balance your utilization.";
+    }
+    else if (lowerMessage.includes("payment") || lowerMessage.includes("history")) {
+      response = "Your payment history is excellent! You have:\n\n" +
+        "• 36 consecutive on-time payments\n" +
+        "• No late payments in your history\n" +
+        "• Consistent payment amounts above the minimum required\n\n" +
+        "Your payment history accounts for about 35% of your credit score calculation and is your strongest category. This excellent behavior has contributed approximately +42 points to your overall score.";
+    }
+    else if (lowerMessage.includes("credit age") || lowerMessage.includes("account age")) {
+      response = "Your credit accounts have the following ages:\n\n" +
+        "• Chase Freedom: 3.2 years\n" +
+        "• Visa Signature: 1.6 years\n\n" +
+        "Your average account age is 2.4 years, which is in the 'Fair' category. Credit history length typically accounts for about 15% of your credit score.\n\n" +
+        "Recommendation: Maintain all current accounts in good standing, as closing your oldest account would negatively impact your score.";
+    }
+    else if (lowerMessage.includes("score")) {
+      response = "Your credit score timeline:\n\n" +
+        "• 3 months ago: 715 (Good)\n" +
+        "• Current: 736 (Good)\n" +
+        "• Potential in 90 days: 778 (Very Good)\n\n" +
+        "Recent changes:\n" +
+        "• Payment History: +2 points\n" +
+        "• Credit Age: +5 points\n" +
+        "• Credit Mix: No change\n" +
+        "• Credit Utilization: -3 points\n\n" +
+        "By following all our recommendations, you could improve by approximately 27-42 points within 90 days.";
+    }
+    else {
+      response = "I'd be happy to help with that, Alex. Based on your recent credit activity, your score has improved by 7 points in the last 30 days to 736, placing you in the 'Good' category.\n\n" +
+        "Your biggest opportunity is reducing your Visa Signature card utilization from 73% to under 30%, which could add 15-25 points to your score.\n\n" +
+        "Is there a specific aspect of your credit you'd like me to analyze in more detail? You can ask about utilization, payment history, account age, or specific recommendations.";
+    }
+    
+    // Add AI response to chat
+    setChatMessages(prev => [...prev, { type: 'ai', text: response }]);
+  };
 
   const handleGetHelp = () => {
     setIsGenerating(true);
@@ -67,6 +163,8 @@ export default function ActionItems({ userId }: ActionItemsProps) {
           setTimeout(() => {
             setShowRecommendations(true);
             setIsGenerating(false);
+            // Show the chatbox by default after analysis is complete
+            setShowChatbox(true);
             
             toast({
               title: "Analysis Complete",
@@ -322,8 +420,118 @@ export default function ActionItems({ userId }: ActionItemsProps) {
                 <span>Credit Utilization: -3 pts</span>
               </div>
             </div>
+            
+            <div className="mt-4 flex justify-center">
+              <Button
+                onClick={() => setShowChatbox(!showChatbox)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1 bg-white/20 text-white border-white/30 hover:bg-white/30"
+              >
+                <span className="material-icons text-sm">
+                  {showChatbox ? "expand_less" : "chat"}
+                </span>
+                {showChatbox ? "Hide AI Chat" : "Chat with CreditGuardian AI"}
+              </Button>
+            </div>
           </div>
         </div>
+        
+        {/* AI Chatbox */}
+        {showChatbox && (
+          <div className="fixed bottom-0 right-0 md:right-6 md:bottom-6 w-full md:w-96 bg-white rounded-t-lg md:rounded-lg shadow-xl border border-neutral-200 z-20 overflow-hidden transition-all duration-300 ease-in-out">
+            <div className="border-b border-neutral-200 px-4 py-3 flex justify-between items-center bg-gradient-to-r from-blue-500 to-primary-600 text-white">
+              <div className="flex items-center">
+                <span className="material-icons mr-2">support_agent</span>
+                <div>
+                  <h3 className="text-sm font-medium">CreditGuardian AI</h3>
+                  <p className="text-xs opacity-80">Personalized credit advice</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowChatbox(false)}
+                className="text-white hover:text-white/80"
+              >
+                <span className="material-icons">close</span>
+              </button>
+            </div>
+            
+            <div 
+              ref={chatContainerRef}
+              className="p-4 h-80 overflow-y-auto flex flex-col space-y-4 bg-neutral-50"
+            >
+              {chatMessages.map((message, index) => (
+                <div 
+                  key={index}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[85%] p-3 ${
+                      message.type === 'user' 
+                        ? 'message-user bg-primary-500 text-white'
+                        : 'message-ai bg-white shadow-sm border border-neutral-200'
+                    }`}
+                  >
+                    <p 
+                      className={`text-sm whitespace-pre-line ${
+                        message.type === 'user' ? 'text-white' : 'text-neutral-800'
+                      }`}
+                    >
+                      {message.text}
+                    </p>
+                    
+                    {message.type === 'ai' && index === chatMessages.length - 1 && (
+                      <div className="flex items-center mt-1">
+                        <span className="text-xs text-primary-500 font-medium mr-auto">
+                          CreditGuardian AI
+                        </span>
+                        
+                        <button 
+                          className="text-xs text-neutral-500 hover:text-primary-500 p-1"
+                          onClick={() => {
+                            // Copy text to clipboard
+                            navigator.clipboard.writeText(message.text);
+                            toast({
+                              title: "Copied to clipboard",
+                              duration: 2000,
+                            });
+                          }}
+                        >
+                          <span className="material-icons text-sm">content_copy</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="p-3 border-t border-neutral-200 bg-white">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                className="flex items-center gap-2"
+              >
+                <Input
+                  value={userMessage}
+                  onChange={(e) => setUserMessage(e.target.value)}
+                  placeholder="Ask about your credit score..."
+                  className="flex-1"
+                />
+                <Button 
+                  type="submit" 
+                  size="icon"
+                  disabled={!userMessage.trim()}
+                  className="h-10 w-10 rounded-full"
+                >
+                  <span className="material-icons">send</span>
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
         
         {/* Analysis Summary */}
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
