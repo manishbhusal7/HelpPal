@@ -163,8 +163,17 @@ export default function ActionItems({ userId }: ActionItemsProps) {
           setTimeout(() => {
             setShowRecommendations(true);
             setIsGenerating(false);
+            
             // Show the chatbox by default after analysis is complete
-            setShowChatbox(true);
+            setTimeout(() => {
+              setShowChatbox(true);
+              
+              toast({
+                title: "AI Assistant Ready",
+                description: "You can now chat with CreditGuardian AI for personalized credit advice.",
+                duration: 5000,
+              });
+            }, 1000);
             
             toast({
               title: "Analysis Complete",
@@ -420,21 +429,28 @@ export default function ActionItems({ userId }: ActionItemsProps) {
                 <span>Credit Utilization: -3 pts</span>
               </div>
             </div>
-            
-            <div className="mt-4 flex justify-center">
-              <Button
-                onClick={() => setShowChatbox(!showChatbox)}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1 bg-white/20 text-white border-white/30 hover:bg-white/30"
-              >
-                <span className="material-icons text-sm">
-                  {showChatbox ? "expand_less" : "chat"}
-                </span>
-                {showChatbox ? "Hide AI Chat" : "Chat with CreditGuardian AI"}
-              </Button>
-            </div>
           </div>
+        </div>
+        
+        {/* Floating Chat Button */}
+        <div className="fixed bottom-6 right-6 z-30">
+          <Button
+            onClick={() => setShowChatbox(!showChatbox)}
+            size="lg"
+            className={`rounded-full h-14 w-14 p-0 shadow-xl flex items-center justify-center ${
+              showChatbox ? 'bg-red-500 hover:bg-red-600' : 'bg-primary-500 hover:bg-primary-600'
+            }`}
+          >
+            <span className="material-icons text-2xl">
+              {showChatbox ? "close" : "chat"}
+            </span>
+          </Button>
+          {!showChatbox && (
+            <div className="absolute -top-10 right-0 whitespace-nowrap bg-white rounded-full px-3 py-1 text-xs font-medium text-primary-700 shadow-md border border-neutral-100">
+              Chat with CreditGuardian AI
+              <div className="absolute bottom-0 right-5 transform translate-y-1/2 rotate-45 w-2 h-2 bg-white border-r border-b border-neutral-100"></div>
+            </div>
+          )}
         </div>
         
         {/* AI Chatbox */}
