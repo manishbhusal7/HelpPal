@@ -15,12 +15,7 @@ export default function ActionItems({ userId }: ActionItemsProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showChatbox, setShowChatbox] = useState(false);
   const [userMessage, setUserMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState<Array<{type: 'user' | 'ai', text: string}>>([
-    {
-      type: 'ai',
-      text: "Hello Alex! I'm your CreditGuardian AI assistant. I've analyzed your financial data and I'm ready to help you improve your credit score. How can I assist you today?"
-    }
-  ]);
+  const [chatMessages, setChatMessages] = useState<Array<{type: 'user' | 'ai', text: string}>>([]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
   const { data: actionItems = [], isLoading } = useQuery<any[]>({
@@ -164,13 +159,27 @@ export default function ActionItems({ userId }: ActionItemsProps) {
             setShowRecommendations(true);
             setIsGenerating(false);
             
-            // Show the chatbox by default after analysis is complete
+            // Show the chatbox by default after analysis is complete and add initial message about transactions
             setTimeout(() => {
+              // Add an initial AI message with transaction analysis
+              setChatMessages([
+                {
+                  type: 'ai',
+                  text: "✓ Analysis Complete! I've reviewed your financial data and found several opportunities to improve your credit score.\n\n" +
+                  "Based on your recent transactions and credit history, I see that:\n\n" +
+                  "1. Your Visa Signature card has 73% utilization ($4,750 of $6,500 limit) - HIGH RISK\n" +
+                  "2. Your dining expenses this month are 22% higher than your 3-month average\n" +
+                  "3. Last major purchase: Electronics $830 (Mar 12, 2025) on Visa card\n\n" +
+                  "Priority Recommendation: Transfer $2,800 from your Visa Signature to your Chase Freedom card to reduce your utilization from 73% to 30%. This alone could add 15-25 points to your score in the next cycle."
+                }
+              ]);
+              
+              // Open the chat
               setShowChatbox(true);
               
               toast({
                 title: "AI Assistant Ready",
-                description: "You can now chat with CreditGuardian AI for personalized credit advice.",
+                description: "CreditGuardian AI has found key opportunities to improve your score!",
                 duration: 5000,
               });
             }, 1000);
