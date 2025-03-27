@@ -44,11 +44,19 @@ export default function ActionItems({ userId }: ActionItemsProps) {
   });
 
   // Scroll to the bottom of the chat container when messages change
+  // Auto-scroll when messages change
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [chatMessages]);
+  
+  // When chat messages are added but chatbox isn't shown, show it
+  useEffect(() => {
+    if (chatMessages.length > 0 && !showChatbox) {
+      setShowChatbox(true);
+    }
+  }, [chatMessages, showChatbox]);
 
   // Handle sending a message in the chatbox
   const handleSendMessage = () => {
@@ -441,8 +449,8 @@ export default function ActionItems({ userId }: ActionItemsProps) {
           </div>
         </div>
         
-        {/* Floating Chat Button */}
-        <div className="fixed bottom-6 right-6 z-30">
+        {/* Floating Chat Button - Always visible */}
+        <div className="fixed bottom-6 right-6 z-40">
           <Button
             onClick={() => setShowChatbox(!showChatbox)}
             size="lg"
@@ -462,9 +470,10 @@ export default function ActionItems({ userId }: ActionItemsProps) {
           )}
         </div>
         
-        {/* AI Chatbox */}
+        {/* AI Chatbox - Separate from the button */}
         {showChatbox && (
-          <div className="fixed bottom-0 right-0 md:right-6 md:bottom-6 w-full md:w-96 bg-white rounded-t-lg md:rounded-lg shadow-xl border border-neutral-200 z-20 overflow-hidden transition-all duration-300 ease-in-out">
+          <div className="fixed bottom-0 right-0 md:right-6 md:bottom-6 w-full md:w-96 bg-white rounded-t-lg md:rounded-lg shadow-xl border border-neutral-200 z-50 overflow-hidden transition-all duration-300 ease-in-out"
+          >
             <div className="border-b border-neutral-200 px-4 py-3 flex justify-between items-center bg-gradient-to-r from-blue-500 to-primary-600 text-white">
               <div className="flex items-center">
                 <span className="material-icons mr-2">support_agent</span>
