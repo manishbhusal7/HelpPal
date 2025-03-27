@@ -188,6 +188,31 @@ export default function ActionItems({ userId }: ActionItemsProps) {
             <p className="text-sm text-neutral-500 mt-1 mb-4 max-w-md">
               CreditGuardian can analyze your financial data and provide personalized action items to help improve your credit score.
             </p>
+            
+            <div className="mt-4 mb-6 bg-neutral-50 rounded-lg p-4 border border-neutral-100 max-w-lg mx-auto text-left">
+              <h4 className="text-sm font-medium text-neutral-800 mb-2 flex items-center">
+                <span className="material-icons text-amber-500 mr-2">tips_and_updates</span>
+                How CreditGuardian Helps You
+              </h4>
+              <ul className="space-y-2 text-xs text-neutral-600">
+                <li className="flex items-start">
+                  <span className="material-icons text-xs text-green-500 mr-1 mt-0.5">check_circle</span>
+                  <span>Analyzes your recent transaction history and credit card usage patterns</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="material-icons text-xs text-green-500 mr-1 mt-0.5">check_circle</span>
+                  <span>Identifies your current credit score factors and opportunities for improvement</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="material-icons text-xs text-green-500 mr-1 mt-0.5">check_circle</span>
+                  <span>Provides specific, actionable recommendations tailored to your financial situation</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="material-icons text-xs text-green-500 mr-1 mt-0.5">check_circle</span>
+                  <span>Estimates potential credit score improvements for each recommendation</span>
+                </li>
+              </ul>
+            </div>
           </div>
           
           <Button 
@@ -211,8 +236,8 @@ export default function ActionItems({ userId }: ActionItemsProps) {
     <div className="bg-white rounded-lg shadow">
       <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-semibold text-neutral-900">Financial Analysis Results</h2>
-          <p className="text-sm text-neutral-500">Personalized recommendations based on your data</p>
+          <h2 className="text-lg font-semibold text-neutral-900">Credit Score Analysis</h2>
+          <p className="text-sm text-neutral-500">Personalized recommendations to improve your credit health</p>
         </div>
         <Button 
           variant="outline" 
@@ -226,6 +251,81 @@ export default function ActionItems({ userId }: ActionItemsProps) {
       </div>
       
       <div className="p-4">
+        {/* Credit Score Overview */}
+        <div className="bg-gradient-to-r from-blue-500 to-primary-600 p-5 rounded-lg text-white mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-semibold">Your Credit Score</h3>
+              <p className="text-xs opacity-90">Last updated: March 21, 2025</p>
+            </div>
+            <div className="flex items-center">
+              <span className="material-icons mr-1">trending_up</span>
+              <span className="text-xs">+7 pts (30 days)</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="text-center">
+              <div className="text-xs mb-1">3 Months Ago</div>
+              <div className="text-2xl font-bold">715</div>
+              <div className="text-xs mt-1">Good</div>
+            </div>
+            
+            <div className="flex-1 px-4">
+              <div className="h-0.5 bg-white/30 relative mx-4">
+                <div className="absolute h-8 border-l border-white -top-4 left-0"></div>
+                <div className="absolute h-8 border-l border-white -top-4 right-0"></div>
+                <div className="absolute h-8 border-l border-white -top-4" style={{ left: "58%" }}></div>
+                <div className="absolute top-1 -mt-8 text-xs" style={{ left: "56%" }}>
+                  <span className="material-icons text-xs text-white/80">arrow_downward</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-xs mb-1">Current</div>
+              <div className="text-3xl font-bold">736</div>
+              <div className="text-xs mt-1">Good</div>
+            </div>
+            
+            <div className="flex-1 px-4">
+              <div className="h-0.5 bg-white/30 relative mx-4">
+                <div className="absolute h-8 border-l border-white/60 -top-4 left-0"></div>
+                <div className="absolute h-8 border-l border-white/60 -top-4 right-0" style={{ right: "0%" }}></div>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-xs mb-1">Potential</div>
+              <div className="text-2xl font-bold">778</div>
+              <div className="text-xs mt-1">Very Good</div>
+            </div>
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-white/20 text-xs">
+            <div className="font-medium">Credit Category Changes Since Last Analysis:</div>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="flex items-center">
+                <span className="material-icons text-green-300 mr-1">arrow_upward</span>
+                <span>Payment History: +2 pts</span>
+              </div>
+              <div className="flex items-center">
+                <span className="material-icons text-green-300 mr-1">arrow_upward</span>
+                <span>Credit Age: +5 pts</span>
+              </div>
+              <div className="flex items-center">
+                <span className="material-icons text-amber-300 mr-1">remove</span>
+                <span>Credit Mix: No change</span>
+              </div>
+              <div className="flex items-center">
+                <span className="material-icons text-red-300 mr-1">arrow_downward</span>
+                <span>Credit Utilization: -3 pts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Analysis Summary */}
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
           <div className="flex items-start">
             <span className="material-icons text-blue-500 mr-3">insights</span>
@@ -252,6 +352,32 @@ export default function ActionItems({ userId }: ActionItemsProps) {
               <div className="font-medium text-blue-900">Account Age</div>
               <div className="text-lg font-bold text-amber-600 mt-1">2.4 yrs</div>
               <div className="text-amber-500">Fair</div>
+            </div>
+          </div>
+          
+          <div className="mt-4 bg-white p-3 rounded border border-blue-100">
+            <h4 className="text-xs font-medium text-blue-900 mb-2">Account-Specific Insights</h4>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
+                  <span>Visa Signature (Wells Fargo)</span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="text-neutral-600">Utilization: <span className="font-medium text-amber-600">73%</span></div>
+                  <div className="text-neutral-600">Balance: <span className="font-medium">$4,750</span></div>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                  <span>Chase Freedom</span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="text-neutral-600">Utilization: <span className="font-medium text-green-600">23%</span></div>
+                  <div className="text-neutral-600">Balance: <span className="font-medium">$2,980</span></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -303,15 +429,39 @@ export default function ActionItems({ userId }: ActionItemsProps) {
             </ul>
             
             <div className="mt-6 bg-neutral-50 rounded-lg p-4 border border-neutral-100">
-              <h4 className="text-sm font-medium mb-2 flex items-center">
+              <h4 className="text-sm font-medium mb-3 flex items-center">
                 <span className="material-icons text-xs mr-1 text-neutral-500">update</span>
-                Analysis Insights
+                Transaction Analysis Insights
               </h4>
-              <p className="text-xs text-neutral-500">
-                Your transaction patterns show recurring payments to Wells Fargo and Chase cards on the 15th of each month.
-                CreditGuardian detected higher than usual spending in the Dining category (22% above your 3-month average),
-                which may be contributing to your current credit utilization rate.
-              </p>
+              
+              <div className="space-y-3">
+                <p className="text-xs text-neutral-500">
+                  <span className="font-medium">Payment Patterns:</span> Your transaction history shows recurring payments to Wells Fargo and Chase cards on the 15th of each month.
+                </p>
+                
+                <p className="text-xs text-neutral-500">
+                  <span className="font-medium">Spending Analysis:</span> CreditGuardian detected higher than usual spending in the Dining category (22% above your 3-month average),
+                  which may be contributing to your current credit utilization rate.
+                </p>
+                
+                <p className="text-xs text-neutral-500">
+                  <span className="font-medium">Account Behavior:</span> Your Wells Fargo Visa Signature card shows a recent balance increase of 12% since February, while
+                  your Chase Freedom card has maintained a steady balance level over the last 60 days.
+                </p>
+              </div>
+              
+              <div className="mt-4 p-3 bg-amber-50 rounded border border-amber-100">
+                <div className="flex items-start">
+                  <span className="material-icons text-amber-500 mr-2">tips_and_updates</span>
+                  <div>
+                    <h5 className="text-xs font-medium text-amber-800">Credit Score Tip</h5>
+                    <p className="text-xs text-amber-700 mt-1">
+                      Reducing your Visa Signature card utilization from 73% to under 30% could improve your credit score by approximately 15-25 points.
+                      Consider transferring part of this balance to your Chase Freedom card which has a lower utilization rate.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
