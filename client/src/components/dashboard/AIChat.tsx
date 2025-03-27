@@ -17,8 +17,14 @@ export default function AIChat({ isVisible, onClose, initialMessage }: AIChatPro
   useEffect(() => {
     if (initialMessage && isVisible) {
       setChatMessages([{ type: 'ai', text: initialMessage }]);
+      console.log("Setting initial AI message:", initialMessage);
     }
   }, [initialMessage, isVisible]);
+
+  // For debugging
+  useEffect(() => {
+    console.log("AIChat visibility changed:", isVisible);
+  }, [isVisible]);
   
   // Auto-scroll when messages change
   useEffect(() => {

@@ -1,9 +1,11 @@
+import { useState } from "react";
 import CreditScoreCard from "@/components/dashboard/CreditScoreCard";
 import CreditUtilizationCard from "@/components/dashboard/CreditUtilizationCard";
 import IncomeMonitoringCard from "@/components/dashboard/IncomeMonitoringCard";
 import CreditScoreSimulator from "@/components/simulator/CreditScoreSimulator";
 import ActionItems from "@/components/dashboard/ActionItems";
 import Notifications from "@/components/dashboard/Notifications";
+import AIChat from "@/components/dashboard/AIChat";
 import { useQuery } from "@tanstack/react-query";
 
 interface DashboardProps {
@@ -21,6 +23,9 @@ interface User {
 }
 
 export default function Dashboard({ userId }: DashboardProps) {
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiMessage, setAiMessage] = useState("");
+  
   const { data: user } = useQuery<User>({
     queryKey: [`/api/users/${userId}`],
     enabled: !!userId,
@@ -171,6 +176,32 @@ export default function Dashboard({ userId }: DashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* AI Chat Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => {
+            setAiMessage("Hi Alex! I've analyzed your financial data and noticed your Visa Signature card has a high utilization rate (73%). Want some tips on how to improve your credit score?");
+            setShowAIChat(true);
+          }}
+          className="rounded-full w-14 h-14 bg-primary text-white shadow-lg flex items-center justify-center hover:bg-primary-600 transition-colors"
+        >
+          <span className="material-icons text-2xl">smart_toy</span>
+        </button>
+        {!showAIChat && (
+          <div className="absolute -top-10 -left-24 whitespace-nowrap bg-white rounded-full px-3 py-1 text-xs font-medium text-primary-700 shadow-md border border-neutral-100">
+            Ask CreditGuardian AI
+            <div className="absolute bottom-0 right-5 transform translate-y-1/2 rotate-45 w-2 h-2 bg-white border-r border-b border-neutral-100"></div>
+          </div>
+        )}
+      </div>
+
+      {/* AI Chat Component */}
+      <AIChat 
+        isVisible={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        initialMessage={aiMessage}
+      />
     </div>
   );
 }
