@@ -1,0 +1,1193 @@
+import { useState, useRef, useEffect } from "react";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  CardDescription,
+  CardFooter
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+
+// Sample grocery items database with detailed alternatives and realistic suggestions
+const groceryDatabase = [
+  {
+    id: 1,
+    name: "General Mills Cheerios",
+    barcode: "7890123456789",
+    price: 4.99,
+    image: "https://img.icons8.com/fluency/96/cereal.png",
+    store: "Walmart",
+    category: "Breakfast",
+    details: "Original flavor, 18oz family size box, whole grain oats",
+    nutritionHighlights: ["Whole Grain", "Low Sugar", "Heart Healthy"],
+    alternatives: [
+      { 
+        id: 101, 
+        name: "Great Value Toasted Whole Grain Oats", 
+        price: 2.49, 
+        savings: 50, 
+        image: "https://img.icons8.com/color/96/cereal-bowl.png",
+        store: "Walmart",
+        brand: "Great Value (Walmart)",
+        comparisonPoints: [
+          "Nearly identical ingredient list",
+          "Same whole grain oats as first ingredient", 
+          "Similar nutritional profile (4g sugar vs 5g)", 
+          "Blind taste tests show 72% can't tell the difference"
+        ],
+        nutritionMatch: 95,
+        reviewScore: 4.3,
+        recommendation: "Save $2.50 on a similar cereal with the same nutritional benefits. Taste tests show most people can't tell the difference between this and the name brand."
+      }
+    ]
+  },
+  {
+    id: 2,
+    name: "Silk Almond Milk Original",
+    barcode: "7890123456790",
+    price: 5.99,
+    image: "https://img.icons8.com/color/96/milk-bottle.png",
+    store: "Whole Foods",
+    category: "Dairy Alternatives",
+    details: "Unsweetened original flavor, 64 fl oz, shelf-stable",
+    nutritionHighlights: ["Dairy-Free", "No Added Sugar", "Calcium Fortified"],
+    alternatives: [
+      { 
+        id: 201, 
+        name: "365 Organic Almond Milk", 
+        price: 3.49, 
+        savings: 42,
+        image: "https://img.icons8.com/fluency/96/milk-bottle.png",
+        store: "Whole Foods",
+        brand: "365 (Whole Foods)",
+        comparisonPoints: [
+          "Identical calcium content (45% DV)",
+          "Both contain vitamin E, D and A",
+          "Organic certification vs conventional",
+          "Same 30 calories per serving"
+        ],
+        nutritionMatch: 98,
+        reviewScore: 4.7,
+        recommendation: "Switch to this store brand to save $2.50 (42%) with identical nutrition. It's even organic, unlike the name brand version."
+      },
+      { 
+        id: 202, 
+        name: "Great Value Almond Milk", 
+        price: 2.78, 
+        savings: 54,
+        image: "https://img.icons8.com/fluency/96/milk.png",
+        store: "Walmart",
+        brand: "Great Value (Walmart)",
+        comparisonPoints: [
+          "Very similar nutritional profile",
+          "Same calorie count (30 per serving)",
+          "Slightly less calcium (40% vs 45% DV)",
+          "Identical vitamin D content"
+        ],
+        nutritionMatch: 94,
+        reviewScore: 4.4, 
+        recommendation: "Save over 50% by going with this alternative at Walmart. The nutrition is nearly identical with just slightly less calcium."
+      }
+    ]
+  },
+  {
+    id: 3,
+    name: "Horizon Organic Cage-Free Eggs",
+    barcode: "7890123456791",
+    price: 6.99,
+    image: "https://img.icons8.com/color/96/eggs.png",
+    store: "Whole Foods",
+    category: "Dairy & Eggs",
+    details: "Large brown eggs, dozen (12 count), USDA Organic, cage-free",
+    nutritionHighlights: ["Organic", "Cage-Free", "High Protein"],
+    alternatives: [
+      { 
+        id: 301, 
+        name: "Pete and Gerry's Organic Eggs", 
+        price: 5.49, 
+        savings: 21,
+        image: "https://img.icons8.com/fluency/96/eggs.png",
+        store: "Kroger",
+        brand: "Pete and Gerry's",
+        comparisonPoints: [
+          "Both USDA Organic certified",
+          "Both from cage-free hens",
+          "Identical nutritional content",
+          "Higher welfare rating (Certified Humane)"
+        ],
+        nutritionMatch: 100,
+        reviewScore: 4.8,
+        coupon: "Buy one get one 50% off this week at Kroger",
+        recommendation: "These eggs have the same organic certification and nutritional value but cost $1.50 less. Plus, they're on special this week at Kroger."
+      },
+      { 
+        id: 302, 
+        name: "365 Organic Cage-Free Eggs", 
+        price: 4.99, 
+        savings: 29,
+        image: "https://img.icons8.com/fluency/96/egg-basket.png",
+        store: "Whole Foods",
+        brand: "365 (Whole Foods)",
+        comparisonPoints: [
+          "Identical USDA Organic certification",
+          "Same cage-free standards",
+          "Exact same nutritional content",
+          "From the same store (Whole Foods)"
+        ],
+        nutritionMatch: 100,
+        reviewScore: 4.6,
+        recommendation: "This is Whole Foods' own brand with identical certifications and quality but costs $2 less. It's the exact same product without the premium branding."
+      }
+    ]
+  },
+  {
+    id: 4,
+    name: "Organic Girl Baby Spinach",
+    barcode: "7890123456792",
+    price: 4.99,
+    image: "https://img.icons8.com/color/96/spinach.png",
+    store: "Whole Foods",
+    category: "Produce",
+    details: "Pre-washed organic baby spinach, 5oz clamshell package",
+    nutritionHighlights: ["Organic", "High in Iron", "Rich in Vitamins"],
+    alternatives: [
+      { 
+        id: 401, 
+        name: "365 Organic Baby Spinach", 
+        price: 3.49, 
+        savings: 30,
+        image: "https://img.icons8.com/color/96/vegetarian-food.png",
+        store: "Whole Foods",
+        brand: "365 (Whole Foods)",
+        comparisonPoints: [
+          "Identical USDA Organic certification",
+          "Same 5oz package size",
+          "Similar freshness guarantee",
+          "Sourced from the same growing regions"
+        ],
+        nutritionMatch: 100,
+        reviewScore: 4.5,
+        recommendation: "Save 30% by switching to Whole Foods' store brand. It's grown in the same regions with identical certification and packaging."
+      },
+      { 
+        id: 402, 
+        name: "Simple Truth Organic Baby Spinach", 
+        price: 3.99, 
+        savings: 20,
+        image: "https://img.icons8.com/fluency/96/lettuce-1.png",
+        store: "Kroger",
+        brand: "Simple Truth (Kroger)",
+        comparisonPoints: [
+          "Same USDA Organic certification",
+          "Larger 6oz package (20% more spinach)",
+          "Identical nutritional profile per serving",
+          "Similar triple-wash process"
+        ],
+        nutritionMatch: 100,
+        reviewScore: 4.4,
+        recommendation: "Not only will you save $1, but you'll get 20% more spinach in this 6oz package versus the 5oz Organic Girl package."
+      }
+    ]
+  },
+  {
+    id: 5,
+    name: "Starbucks Pike Place Medium Roast Coffee",
+    barcode: "7890123456793",
+    price: 14.99,
+    image: "https://img.icons8.com/color/96/coffee-beans-.png",
+    store: "Target",
+    category: "Beverages",
+    details: "Ground coffee, medium roast, 12oz bag, 100% arabica beans",
+    nutritionHighlights: ["Fair Trade", "Smooth Flavor", "Medium Acidity"],
+    alternatives: [
+      { 
+        id: 501, 
+        name: "Good & Gather Breakfast Blend", 
+        price: 7.99, 
+        savings: 47,
+        image: "https://img.icons8.com/fluency/96/coffee-beans-.png",
+        store: "Target",
+        brand: "Good & Gather (Target)",
+        comparisonPoints: [
+          "Same 100% arabica beans",
+          "Similar medium roast profile",
+          "Larger 16oz bag (33% more coffee)",
+          "4.6/5 star customer rating"
+        ],
+        nutritionMatch: "N/A",
+        reviewScore: 4.6,
+        recommendation: "Target's premium coffee brand offers a very similar taste profile but costs 47% less and gives you 33% more coffee per package."
+      },
+      { 
+        id: 502, 
+        name: "Peet's Coffee Big Bang Medium Roast", 
+        price: 9.99, 
+        savings: 33,
+        image: "https://img.icons8.com/color/96/ground-coffee.png",
+        store: "Target",
+        brand: "Peet's Coffee",
+        comparisonPoints: [
+          "Premium specialty coffee brand",
+          "Often preferred in blind taste tests",
+          "Similar medium roast profile",
+          "Same 12oz package size"
+        ],
+        nutritionMatch: "N/A",
+        reviewScore: 4.8,
+        coupon: "Buy one get one 50% off this week",
+        recommendation: "This premium coffee is already $5 less than Starbucks, and it's on a special BOGO 50% deal this week, making it an even better value."
+      }
+    ]
+  }
+];
+
+// Sample purchase history to suggest restock items
+const purchaseHistory = [
+  { 
+    id: 1, 
+    name: "2% Milk", 
+    lastPurchase: "2 weeks ago", 
+    suggestRestock: true,
+    daysUntilEmpty: 2,
+    image: "https://img.icons8.com/color/96/milk.png",
+    averageDuration: "14 days",
+    personalizedNote: "You typically buy milk every two weeks. Based on your usage patterns, you'll run out in 2 days."
+  },
+  { 
+    id: 2, 
+    name: "Whole Wheat Bread", 
+    lastPurchase: "1 week ago", 
+    suggestRestock: false,
+    daysUntilEmpty: 4,
+    image: "https://img.icons8.com/color/96/bread.png", 
+    averageDuration: "10 days",
+    personalizedNote: "Your bread consumption suggests you still have about 4 days supply remaining."
+  },
+  { 
+    id: 3, 
+    name: "Organic Large Eggs", 
+    lastPurchase: "3 weeks ago", 
+    suggestRestock: true,
+    daysUntilEmpty: 0,
+    image: "https://img.icons8.com/color/96/eggs.png",
+    averageDuration: "21 days",
+    personalizedNote: "Your household typically goes through a dozen eggs every 3 weeks. You're likely out or almost out now."
+  },
+  { 
+    id: 4, 
+    name: "Pike Place Coffee", 
+    lastPurchase: "1 month ago", 
+    suggestRestock: true,
+    daysUntilEmpty: 1,
+    image: "https://img.icons8.com/color/96/coffee-beans-.png",
+    averageDuration: "30 days",
+    personalizedNote: "Based on your coffee consumption habits, you'll need to restock in the next day. Consider our suggested alternative to save money."
+  },
+  { 
+    id: 5, 
+    name: "All-Purpose Flour", 
+    lastPurchase: "2 months ago", 
+    suggestRestock: false,
+    daysUntilEmpty: 14,
+    image: "https://img.icons8.com/color/96/flour.png",
+    averageDuration: "3 months",
+    personalizedNote: "Your baking frequency indicates you still have about 2 weeks of flour remaining."
+  }
+];
+
+// Weekly savings stats - Alex's progress
+const weeklySavings = {
+  total: 15.42,
+  groceries: 9.87,
+  household: 3.25,
+  personal: 2.30,
+  appliedToDebt: 10.00,
+  remaining: 5.42,
+  targetWeeklyGoal: 25.00,
+  savingsHistory: [
+    { week: 'Mar 1-7', amount: 12.50 },
+    { week: 'Mar 8-14', amount: 8.75 },
+    { week: 'Mar 15-21', amount: 15.42 }
+  ],
+  savingsAppliedToCards: [
+    { card: "Visa Signature", amount: 6.50, date: "Mar 15, 2025" },
+    { card: "Chase Freedom", amount: 3.50, date: "Mar 15, 2025" }
+  ]
+};
+
+export default function GroceryScanner() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [scannedItems, setScannedItems] = useState<any[]>([]);
+  const [selectedAlternatives, setSelectedAlternatives] = useState<any[]>([]);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [activeTab, setActiveTab] = useState("scanner");
+  const [justScanned, setJustScanned] = useState<any>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [computerVisionStage, setComputerVisionStage] = useState(0);
+  const [analyzedItem, setAnalyzedItem] = useState<any>(null);
+  const [showRecommendation, setShowRecommendation] = useState(false);
+  const [scanningProgress, setScanningProgress] = useState(0);
+  
+  const cameraRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const { toast } = useToast();
+
+  // Simulate computer vision analysis progression
+  useEffect(() => {
+    if (isAnalyzing && computerVisionStage < 5) {
+      const stages = [
+        "Identifying product...",
+        "Analyzing nutritional content...",
+        "Searching price database...",
+        "Comparing alternatives...",
+        "Generating personalized recommendations..."
+      ];
+      
+      // Increment progress bar
+      const interval = setInterval(() => {
+        setScanningProgress(prev => {
+          if (prev < 100) return prev + 1;
+          return prev;
+        });
+      }, 30);
+      
+      // Progress through stages
+      const timeout = setTimeout(() => {
+        if (computerVisionStage < 4) {
+          toast({
+            title: "Analysis Progress",
+            description: stages[computerVisionStage],
+          });
+          setComputerVisionStage(computerVisionStage + 1);
+        } else {
+          setIsAnalyzing(false);
+          setShowRecommendation(true);
+          clearInterval(interval);
+        }
+      }, 1200);
+      
+      return () => {
+        clearTimeout(timeout);
+        clearInterval(interval);
+      };
+    }
+  }, [isAnalyzing, computerVisionStage, toast]);
+
+  const handleSearch = () => {
+    if (searchTerm.trim() === "") return;
+    
+    // Find item in our mock database
+    const foundItem = groceryDatabase.find(
+      item => item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+              item.barcode === searchTerm
+    );
+    
+    if (foundItem) {
+      handleItemFound(foundItem);
+    } else {
+      toast({
+        title: "Item Not Found",
+        description: "Sorry, we couldn't find that grocery item in our database.",
+        variant: "destructive"
+      });
+    }
+    
+    setSearchTerm("");
+  };
+
+  const handleItemFound = (foundItem: any) => {
+    // Check if already in scanned items
+    if (!scannedItems.some(item => item.id === foundItem.id)) {
+      setAnalyzedItem(foundItem);
+      setIsAnalyzing(true);
+      setComputerVisionStage(0);
+      setScanningProgress(0);
+      
+      toast({
+        title: "Item Detected",
+        description: `${foundItem.name} has been recognized. Starting detailed analysis...`,
+      });
+      
+      // Add to scanned items after analysis
+      setTimeout(() => {
+        setScannedItems([...scannedItems, foundItem]);
+        setJustScanned(foundItem);
+      }, 5000);
+    } else {
+      toast({
+        title: "Item Already Added",
+        description: `${foundItem.name} is already in your list.`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const toggleCamera = () => {
+    if (isCameraActive) {
+      // Turn off camera
+      setIsCameraActive(false);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    } else {
+      // Turn on camera
+      setIsCameraActive(true);
+      
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 } 
+          } 
+        })
+          .then(stream => {
+            if (cameraRef.current) {
+              cameraRef.current.srcObject = stream;
+              streamRef.current = stream;
+            }
+          })
+          .catch(err => {
+            console.error("Error accessing camera: ", err);
+            toast({
+              title: "Camera Access Failed",
+              description: "We couldn't access your camera. Please check permissions.",
+              variant: "destructive"
+            });
+            setIsCameraActive(false);
+          });
+      }
+    }
+  };
+
+  const simulateScan = () => {
+    setIsScanning(true);
+    
+    // Mock scanning process
+    setTimeout(() => {
+      // Randomly select an item from the database to "scan"
+      const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
+      const scannedItem = groceryDatabase[randomIndex];
+      
+      handleItemFound(scannedItem);
+      setIsScanning(false);
+    }, 1500);
+  };
+
+  const selectAlternative = (original: any, alternative: any) => {
+    setSelectedAlternatives([
+      ...selectedAlternatives.filter(item => item.originalId !== original.id), 
+      { originalId: original.id, alternative }
+    ]);
+    
+    toast({
+      title: "Savings Applied",
+      description: `Switched to ${alternative.name} and saved $${(original.price - alternative.price).toFixed(2)}!`,
+    });
+    
+    // Show follow-up toast with personalized recommendation
+    setTimeout(() => {
+      toast({
+        title: "Personalized Tip",
+        description: `Based on your shopping patterns, switching to store brands for just 5 items could save you about $27 per month - enough to reduce your Visa card balance by $324 per year.`,
+      });
+    }, 2000);
+  };
+
+  const isAlternativeSelected = (originalId: number, alternativeId: number) => {
+    const selection = selectedAlternatives.find(item => item.originalId === originalId);
+    return selection && selection.alternative.id === alternativeId;
+  };
+  
+  const calculateTotalSavings = () => {
+    return selectedAlternatives.reduce((total, item) => {
+      const originalItem = groceryDatabase.find(g => g.id === item.originalId);
+      if (originalItem) {
+        return total + (originalItem.price - item.alternative.price);
+      }
+      return total;
+    }, 0);
+  };
+
+  const calculateOriginalTotal = () => {
+    return scannedItems.reduce((total, item) => total + item.price, 0);
+  };
+  
+  const calculateFinalTotal = () => {
+    return scannedItems.reduce((total, item) => {
+      const alternative = selectedAlternatives.find(alt => alt.originalId === item.id);
+      if (alternative) {
+        return total + alternative.alternative.price;
+      }
+      return total + item.price;
+    }, 0);
+  };
+
+  const applySavingsToDebt = () => {
+    // Personalized for Alex's credit cards
+    const savingsAmount = calculateTotalSavings();
+    const visaAmount = (savingsAmount * 0.6).toFixed(2); // 60% to Visa (higher interest)
+    const chaseAmount = (savingsAmount * 0.4).toFixed(2); // 40% to Chase
+    
+    toast({
+      title: "Savings Applied to Credit Cards",
+      description: `$${savingsAmount.toFixed(2)} has been applied to your Visa Signature ($${visaAmount}) and Chase Freedom ($${chaseAmount}) cards based on optimal debt allocation.`,
+      variant: "default"
+    });
+    
+    // Show follow-up toast about progress toward weekly goal
+    setTimeout(() => {
+      const totalSaved = weeklySavings.total + savingsAmount;
+      const percentComplete = (totalSaved / weeklySavings.targetWeeklyGoal) * 100;
+      toast({
+        title: `${percentComplete.toFixed(0)}% to Weekly Goal`,
+        description: `You've saved $${totalSaved.toFixed(2)} toward your weekly goal of $${weeklySavings.targetWeeklyGoal.toFixed(2)}. At this rate, you'll pay off your Visa Signature 3.5 months sooner!`,
+        variant: "default"
+      });
+    }, 2000);
+  };
+
+  const dismissRecommendation = () => {
+    setShowRecommendation(false);
+    setAnalyzedItem(null);
+  };
+
+  const acceptRecommendation = (item: any, alternative: any) => {
+    selectAlternative(item, alternative);
+    setShowRecommendation(false);
+    setAnalyzedItem(null);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Tabs defaultValue="scanner" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="scanner">Smart Scanner</TabsTrigger>
+          <TabsTrigger value="savings">Savings Report</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="scanner" className="space-y-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>AI-Powered Grocery Scanner</CardTitle>
+              <CardDescription>
+                Scan products to find better deals with our computer vision technology
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isCameraActive ? (
+                <div className="relative">
+                  <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
+                    <video 
+                      ref={cameraRef} 
+                      autoPlay 
+                      playsInline 
+                      className="w-full h-full object-cover"
+                    ></video>
+                    
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {isScanning ? (
+                        <div className="flex flex-col items-center">
+                          <div className="animate-pulse flex items-center justify-center h-32 w-32 bg-primary-500 bg-opacity-20 rounded">
+                            <span className="text-white font-medium">Scanning...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-primary-500 w-72 h-48 rounded flex items-center justify-center relative">
+                          {/* Corner markers to simulate computer vision detection */}
+                          <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary-500"></div>
+                          <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary-500"></div>
+                          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary-500"></div>
+                          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary-500"></div>
+                          
+                          {/* Visual guides */}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <div className="w-full h-1/2 border border-dashed border-white/20 flex items-center justify-center">
+                              <div className="w-3/4 h-3/4 border border-dashed border-white/20 flex items-center justify-center">
+                                <span className="text-sm text-white bg-black bg-opacity-50 p-1 rounded text-center">
+                                  Position product in frame
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                      <button
+                        onClick={simulateScan}
+                        disabled={isScanning}
+                        className="bg-primary-500 text-white py-2 px-4 rounded-full font-medium flex items-center justify-center disabled:opacity-50"
+                      >
+                        {isScanning ? (
+                          <span className="flex items-center"><span className="material-icons mr-2">hourglass_top</span> Scanning...</span>
+                        ) : (
+                          <span className="flex items-center"><span className="material-icons mr-2">photo_camera</span> Analyze Product</span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="absolute top-2 right-2 bg-white/80"
+                    onClick={toggleCamera}
+                  >
+                    <span className="material-icons">close</span>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex space-x-2">
+                    <Input
+                      className="flex-1"
+                      placeholder="Search items or enter barcode (try 'Coffee', 'Eggs', or use a barcode)"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSearch();
+                      }}
+                    />
+                    <Button onClick={handleSearch}>
+                      <span className="material-icons mr-2">search</span>
+                      Search
+                    </Button>
+                  </div>
+                  
+                  <Button 
+                    onClick={toggleCamera} 
+                    variant="outline" 
+                    className="w-full py-8 bg-neutral-50 hover:bg-neutral-100 border-dashed border-2"
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="material-icons text-4xl text-neutral-400 mb-2">photo_camera</span>
+                      <span className="font-medium">Tap to Scan with Computer Vision</span>
+                      <span className="text-xs text-neutral-500 mt-1">Our AI will analyze the product and find you the best deals</span>
+                    </div>
+                  </Button>
+                </div>
+              )}
+              
+              {/* Computer Vision Analysis in Progress */}
+              {isAnalyzing && (
+                <div className="bg-white border border-blue-100 rounded-lg p-4 animate-fadeIn mt-4">
+                  <div className="flex flex-col">
+                    <h4 className="font-medium text-lg text-blue-900 flex items-center">
+                      <span className="material-icons text-blue-500 mr-2">auto_awesome</span>
+                      AI Analysis in Progress
+                    </h4>
+                    
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <div className="flex justify-between text-xs text-neutral-500 mb-1">
+                          <span>Computer Vision Recognition</span>
+                          <span className="font-medium">{scanningProgress}%</span>
+                        </div>
+                        <Progress value={scanningProgress} className="h-2" />
+                      </div>
+                      
+                      <div className="grid grid-cols-5 gap-1 mt-3">
+                        {["Identifying", "Nutrition", "Pricing", "Alternatives", "Recommendation"].map((stage, index) => (
+                          <div 
+                            key={index} 
+                            className={`text-center p-1 rounded text-xs ${
+                              computerVisionStage >= index 
+                                ? "bg-blue-100 text-blue-800" 
+                                : "bg-neutral-100 text-neutral-400"
+                            }`}
+                          >
+                            {stage}
+                            {computerVisionStage === index && (
+                              <span className="inline-block ml-1 animate-pulse">...</span>
+                            )}
+                            {computerVisionStage > index && (
+                              <span className="material-icons text-xs text-green-500 ml-1">check</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-600 flex items-start">
+                      <span className="material-icons text-xs mr-1 mt-0.5">info</span>
+                      <span>CreditGuardian is analyzing this product across 240+ retailers to find you the best deals and credit-friendly alternatives.</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Product Recommendation Dialog */}
+              {showRecommendation && analyzedItem && (
+                <div className="bg-white border border-primary-100 rounded-lg shadow-lg p-4 mt-4 animate-fadeIn">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-medium text-lg text-primary-900 flex items-center">
+                      <span className="material-icons text-primary-500 mr-2">auto_awesome</span>
+                      Savings Opportunity Found!
+                    </h4>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={dismissRecommendation}
+                      className="h-8 w-8 p-0 rounded-full"
+                    >
+                      <span className="material-icons">close</span>
+                    </Button>
+                  </div>
+                  
+                  <div className="mt-3">
+                    <div className="flex items-start border-b pb-3">
+                      <div className="bg-white border rounded-md p-2 mr-3">
+                        <img src={analyzedItem.image} alt={analyzedItem.name} className="w-16 h-16 object-contain" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium">{analyzedItem.name}</h5>
+                        <div className="text-lg font-bold text-primary-700">
+                          ${analyzedItem.price.toFixed(2)}
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {analyzedItem.nutritionHighlights?.map((highlight: string, i: number) => (
+                            <Badge key={i} variant="outline" className="bg-neutral-50 text-neutral-700">
+                              {highlight}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Best alternative */}
+                    {analyzedItem.alternatives && analyzedItem.alternatives.length > 0 && (
+                      <div className="mt-3">
+                        <h5 className="font-medium text-sm text-neutral-600 mb-2">Recommended Alternative:</h5>
+                        <div className="bg-primary-50 rounded-lg p-3">
+                          <div className="flex items-start">
+                            <div className="bg-white border rounded-md p-1 mr-3">
+                              <img src={analyzedItem.alternatives[0].image} alt={analyzedItem.alternatives[0].name} className="w-12 h-12 object-contain" />
+                            </div>
+                            <div className="flex-1">
+                              <h5 className="font-medium">{analyzedItem.alternatives[0].name}</h5>
+                              <div className="flex items-baseline">
+                                <span className="text-lg font-bold text-primary-700">
+                                  ${analyzedItem.alternatives[0].price.toFixed(2)}
+                                </span>
+                                <span className="ml-2 bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
+                                  Save ${(analyzedItem.price - analyzedItem.alternatives[0].price).toFixed(2)} ({analyzedItem.alternatives[0].savings}%)
+                                </span>
+                              </div>
+                              
+                              {analyzedItem.alternatives[0].nutritionMatch && (
+                                <div className="flex items-center mt-1 text-xs text-green-700">
+                                  <span className="material-icons text-xs mr-1">verified</span>
+                                  <span>{analyzedItem.alternatives[0].nutritionMatch}% Nutrition Match</span>
+                                </div>
+                              )}
+                              
+                              {analyzedItem.alternatives[0].coupon && (
+                                <div className="flex items-center mt-1 text-xs text-amber-700">
+                                  <span className="material-icons text-xs mr-1">sell</span>
+                                  <span>{analyzedItem.alternatives[0].coupon}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 text-sm">
+                            <div className="font-medium mb-1 text-primary-700">Why We Recommend This:</div>
+                            <p className="text-neutral-600">
+                              {analyzedItem.alternatives[0].recommendation}
+                            </p>
+                            
+                            <div className="mt-2">
+                              <div className="text-xs text-neutral-500 mb-1">Key Comparison Points:</div>
+                              <ul className="space-y-1 text-xs text-neutral-600">
+                                {analyzedItem.alternatives[0].comparisonPoints.map((point: string, idx: number) => (
+                                  <li key={idx} className="flex items-start">
+                                    <span className="material-icons text-xs text-green-500 mr-1 mt-0.5">check_circle</span>
+                                    <span>{point}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex space-x-3 mt-3">
+                          <Button 
+                            className="flex-1"
+                            onClick={() => acceptRecommendation(analyzedItem, analyzedItem.alternatives[0])}
+                          >
+                            <span className="material-icons mr-1 text-sm">check_circle</span>
+                            Switch & Save
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={dismissRecommendation}
+                          >
+                            Keep Original
+                          </Button>
+                        </div>
+                        
+                        <div className="text-xs text-neutral-400 text-center mt-2">
+                          You could save approximately ${(analyzedItem.price - analyzedItem.alternatives[0].price).toFixed(2)} by switching
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Just scanned item alert - appears after analysis complete */}
+              {justScanned && !showRecommendation && !isAnalyzing && (
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 animate-fadeIn">
+                  <div className="flex items-start">
+                    <div className="bg-white p-2 rounded-md mr-3">
+                      <img src={justScanned.image} alt={justScanned.name} className="w-12 h-12 object-contain" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-blue-900">{justScanned.name}</h4>
+                      <div className="text-sm text-blue-700 font-medium">
+                        ${justScanned.price.toFixed(2)} at {justScanned.store}
+                      </div>
+                      
+                      {justScanned.alternatives && justScanned.alternatives.length > 0 && (
+                        <div className="flex items-center mt-2">
+                          <span className="material-icons text-sm text-amber-500 mr-1">tips_and_updates</span>
+                          <span className="text-sm text-amber-700">
+                            {justScanned.alternatives[0].recommendation}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-blue-500"
+                      onClick={() => setJustScanned(null)}
+                    >
+                      <span className="material-icons">close</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Shopping List */}
+              {scannedItems.length > 0 && (
+                <div className="space-y-4 mt-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Shopping List ({scannedItems.length} items)</h3>
+                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100" variant="outline">
+                      Potential Savings: ${calculateTotalSavings().toFixed(2)}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {scannedItems.map((item) => {
+                      const alternative = selectedAlternatives.find(alt => alt.originalId === item.id);
+                      
+                      return (
+                        <Card key={item.id} className={`overflow-hidden transition-all ${alternative ? 'border-green-200 bg-green-50' : ''}`}>
+                          <CardContent className="p-3">
+                            <div className="flex items-start">
+                              <div className={`p-2 rounded-md mr-3 ${alternative ? 'bg-white' : 'bg-neutral-50'}`}>
+                                <img 
+                                  src={alternative ? alternative.alternative.image : item.image} 
+                                  alt={alternative ? alternative.alternative.name : item.name} 
+                                  className="w-12 h-12 object-contain" 
+                                />
+                              </div>
+                              
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h4 className="font-medium">
+                                      {alternative ? alternative.alternative.name : item.name}
+                                      {alternative && (
+                                        <Badge className="ml-2 bg-green-100 text-green-700" variant="outline" size="sm">
+                                          Switched
+                                        </Badge>
+                                      )}
+                                    </h4>
+                                    <div className="flex items-baseline">
+                                      <span className="font-bold">
+                                        ${alternative ? alternative.alternative.price.toFixed(2) : item.price.toFixed(2)}
+                                      </span>
+                                      
+                                      {alternative && (
+                                        <span className="ml-2 text-xs text-green-600 font-medium">
+                                          Saved ${(item.price - alternative.alternative.price).toFixed(2)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    className="h-8 w-8 rounded-full p-0"
+                                    onClick={() => setScannedItems(scannedItems.filter(i => i.id !== item.id))}
+                                  >
+                                    <span className="material-icons text-neutral-400">close</span>
+                                  </Button>
+                                </div>
+                                
+                                {!alternative && item.alternatives && item.alternatives.length > 0 && (
+                                  <div className="mt-2 space-y-2">
+                                    <div className="text-xs font-medium text-neutral-600">Suggested alternatives:</div>
+                                    
+                                    <div className="flex flex-wrap gap-2">
+                                      {item.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          className={`
+                                            flex items-center p-1.5 text-xs rounded border transition-colors
+                                            ${isAlternativeSelected(item.id, alt.id) 
+                                              ? 'bg-green-100 border-green-200 text-green-800' 
+                                              : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'}
+                                          `}
+                                          onClick={() => selectAlternative(item, alt)}
+                                        >
+                                          <div className="w-6 h-6 bg-white rounded mr-1.5 flex-shrink-0">
+                                            <img src={alt.image} className="w-full h-full object-contain" alt={alt.name} />
+                                          </div>
+                                          <div className="flex flex-col">
+                                            <span className="font-medium">${alt.price.toFixed(2)}</span>
+                                            <span className="text-green-600 text-[10px]">Save {alt.savings}%</span>
+                                          </div>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Totals */}
+                  {scannedItems.length > 0 && (
+                    <div className="bg-white rounded-lg border p-4">
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-neutral-600">Original Total:</span>
+                          <span className="font-medium">${calculateOriginalTotal().toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-neutral-600">Total Savings:</span>
+                          <span className="font-medium text-green-600">${calculateTotalSavings().toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="font-medium">New Total:</span>
+                          <span className="font-bold">${calculateFinalTotal().toFixed(2)}</span>
+                        </div>
+                      </div>
+                      
+                      {calculateTotalSavings() > 0 && (
+                        <div className="mt-4">
+                          <Button 
+                            onClick={applySavingsToDebt}
+                            className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600"
+                          >
+                            <span className="material-icons">savings</span>
+                            Apply Savings to Credit Cards
+                          </Button>
+                          <div className="text-xs text-center text-neutral-500 mt-2">
+                            Your savings will be automatically distributed to optimize debt reduction
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Restock Suggestions */}
+              {scannedItems.length === 0 && !isAnalyzing && !showRecommendation && (
+                <div className="mt-6">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center">
+                        <span className="material-icons text-amber-500 mr-2">shopping_basket</span>
+                        Need to Restock?
+                      </CardTitle>
+                      <CardDescription>
+                        Based on your shopping patterns, we suggest restocking these items
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-4">
+                      <div className="space-y-3">
+                        {purchaseHistory.filter(item => item.suggestRestock).map((item) => (
+                          <div key={item.id} className="flex items-start py-2 border-b border-dashed border-neutral-100 last:border-0">
+                            <div className="bg-neutral-50 p-1.5 rounded mr-3">
+                              <img src={item.image} alt={item.name} className="w-8 h-8 object-contain" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between">
+                                <div>
+                                  <h4 className="font-medium text-sm">{item.name}</h4>
+                                  <p className="text-xs text-neutral-500">Last purchased: {item.lastPurchase}</p>
+                                </div>
+                                <Badge 
+                                  className={
+                                    item.daysUntilEmpty === 0 
+                                      ? "bg-red-100 text-red-800" 
+                                      : item.daysUntilEmpty <= 3 
+                                        ? "bg-amber-100 text-amber-800" 
+                                        : "bg-neutral-100 text-neutral-800"
+                                  } 
+                                  variant="outline"
+                                >
+                                  {item.daysUntilEmpty === 0 
+                                    ? "Out now" 
+                                    : `${item.daysUntilEmpty} day${item.daysUntilEmpty !== 1 ? 's' : ''} left`}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-neutral-500 mt-1">
+                                {item.personalizedNote}
+                              </p>
+                            </div>
+                            <Button variant="ghost" size="sm" className="text-primary-500 h-7 w-7 rounded-full p-0">
+                              <span className="material-icons text-sm">add_circle</span>
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex flex-col text-center space-y-2 text-xs text-neutral-500 border-t pt-4">
+              <div className="flex items-center justify-center">
+                <span className="material-icons text-xs mr-1">info</span>
+                <span>
+                  Scan items with our AI-powered grocery analyzer to find better deals.
+                </span>
+              </div>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="savings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Savings Report</CardTitle>
+              <CardDescription>
+                Track your savings and see how they're reducing your credit card debt
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Weekly Progress */}
+              <div>
+                <h3 className="text-sm font-medium mb-2">Weekly Savings Goal</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>
+                      Current: ${weeklySavings.total.toFixed(2)}
+                    </span>
+                    <span>
+                      Goal: ${weeklySavings.targetWeeklyGoal.toFixed(2)}
+                    </span>
+                  </div>
+                  <Progress value={(weeklySavings.total / weeklySavings.targetWeeklyGoal) * 100} className="h-3" />
+                  <div className="text-xs text-neutral-500">
+                    {(weeklySavings.total / weeklySavings.targetWeeklyGoal * 100).toFixed(0)}% of your weekly savings goal
+                  </div>
+                </div>
+              </div>
+              
+              {/* Savings Categories */}
+              <div>
+                <h3 className="text-sm font-medium mb-2">Savings by Category</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-neutral-50 p-3 rounded-lg">
+                    <div className="font-bold text-primary-500">${weeklySavings.groceries.toFixed(2)}</div>
+                    <div className="text-xs text-neutral-600">Groceries</div>
+                  </div>
+                  <div className="bg-neutral-50 p-3 rounded-lg">
+                    <div className="font-bold text-primary-500">${weeklySavings.household.toFixed(2)}</div>
+                    <div className="text-xs text-neutral-600">Household</div>
+                  </div>
+                  <div className="bg-neutral-50 p-3 rounded-lg">
+                    <div className="font-bold text-primary-500">${weeklySavings.personal.toFixed(2)}</div>
+                    <div className="text-xs text-neutral-600">Personal</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Credit Card Debt Reduction */}
+              <div>
+                <h3 className="text-sm font-medium mb-2">Applied to Credit Cards</h3>
+                <div className="bg-white border rounded-lg p-3">
+                  <div className="flex justify-between mb-2">
+                    <div className="text-xs text-neutral-600">Total Applied to Cards</div>
+                    <div className="font-bold text-green-600">${weeklySavings.appliedToDebt.toFixed(2)}</div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {weeklySavings.savingsAppliedToCards.map((card, idx) => (
+                      <div key={idx} className="bg-neutral-50 p-2 rounded flex justify-between items-center">
+                        <div className="flex items-center">
+                          <span className="material-icons text-neutral-400 mr-1 text-sm">credit_card</span>
+                          <span className="text-xs">{card.card}</span>
+                        </div>
+                        <div className="text-xs font-medium">${card.amount.toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-dashed">
+                    <div className="flex justify-between">
+                      <div className="text-xs text-neutral-600">Remaining to Apply</div>
+                      <div className="font-medium">${weeklySavings.remaining.toFixed(2)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Impact on Credit Balance */}
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100 p-4 rounded-lg">
+                <h3 className="text-sm font-medium mb-2 text-primary-800">Projected Credit Impact</h3>
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <div className="text-xs text-primary-700">Monthly Grocery Savings</div>
+                    <div className="font-bold text-primary-900">~$40.00</div>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <div className="text-xs text-primary-700">Annual Credit Card Reduction</div>
+                    <div className="font-bold text-primary-900">~$480.00</div>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <div className="text-xs text-primary-700">Interest Savings (1 year)</div>
+                    <div className="font-bold text-primary-900">~$89.28</div>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <div className="text-xs text-primary-700">Credit Score Impact (est.)</div>
+                    <div className="font-bold text-primary-900">+5 to +8 points</div>
+                  </div>
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-primary-200 border-dashed">
+                  <div className="text-xs text-primary-700">
+                    At this savings rate, you'll reduce your Visa Signature card balance by $480 in one year, saving approximately $89.28 in interest payments.
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

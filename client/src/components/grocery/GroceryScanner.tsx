@@ -263,17 +263,22 @@ export default function GroceryScanner() {
       toast({
         title: "Item Scanned Successfully",
         description: `${foundItem.name} ($${foundItem.price.toFixed(2)}) has been added to your list.`,
+        duration: 5000, // Longer duration for visibility
       });
       
-      // If there are alternatives, suggest the first one automatically
+      // The JustScanned item will stay visible until user confirms with check mark
+      // so no need for automatic removal
+      
+      // Display recommendations in a toast as well
       if (foundItem.alternatives && foundItem.alternatives.length > 0) {
         setTimeout(() => {
           toast({
             title: "Savings Opportunity Found!",
             description: foundItem.alternatives[0].recommendation,
-            variant: "default"
+            variant: "default",
+            duration: 8000, // Make these stay visible longer
           });
-        }, 1000);
+        }, 1200);
       }
     } else {
       toast({
@@ -319,15 +324,24 @@ export default function GroceryScanner() {
   const simulateScan = () => {
     setIsScanning(true);
     
-    // Mock scanning process
+    // Mock scanning process with more realistic timing
     setTimeout(() => {
-      // Randomly select an item from the database to "scan"
-      const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
-      const scannedItem = groceryDatabase[randomIndex];
+      // Show a processing state for a more realistic experience
+      toast({
+        title: "Product Detected",
+        description: "Analyzing pricing information...",
+      });
       
-      handleItemFound(scannedItem);
-      setIsScanning(false);
-    }, 1500);
+      // Add a second delay to simulate deeper processing
+      setTimeout(() => {
+        // Randomly select an item from the database to "scan"
+        const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
+        const scannedItem = groceryDatabase[randomIndex];
+        
+        handleItemFound(scannedItem);
+        setIsScanning(false);
+      }, 1200);
+    }, 2000);
   };
 
   const selectAlternative = (original: any, alternative: any) => {
@@ -401,9 +415,9 @@ export default function GroceryScanner() {
         <TabsContent value="scanner" className="space-y-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>Smart Grocery Scanner</CardTitle>
+              <CardTitle>Smart Grocery AI Vision Scanner</CardTitle>
               <CardDescription>
-                Scan products to find better deals and save on your grocery shopping
+                Use our computer vision technology to scan products and find better deals
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -417,17 +431,20 @@ export default function GroceryScanner() {
                       className="w-full h-full object-cover"
                     ></video>
                     
+                    {/* Scanner animation overlay */}
+                    {isScanning && <div className="animate-scanner" />}
+                    
                     <div className="absolute inset-0 flex items-center justify-center">
                       {isScanning ? (
                         <div className="flex flex-col items-center">
-                          <div className="animate-pulse flex items-center justify-center h-20 w-60 bg-primary-500 bg-opacity-20 rounded-lg">
-                            <span className="text-white font-medium">Scanning...</span>
+                          <div className="animate-pulse-border flex items-center justify-center h-20 w-60 bg-primary bg-opacity-20 rounded-lg">
+                            <span className="text-white font-medium animate-blink">Scanning for product...</span>
                           </div>
                         </div>
                       ) : (
-                        <div className="border-2 border-primary-500 w-60 h-20 rounded-lg flex items-center justify-center">
+                        <div className="border-2 border-primary w-60 h-20 rounded-lg flex items-center justify-center">
                           <span className="text-sm text-white bg-black bg-opacity-50 p-1 rounded">
-                            Position barcode here
+                            Position product in view
                           </span>
                         </div>
                       )}
@@ -437,12 +454,16 @@ export default function GroceryScanner() {
                       <button
                         onClick={simulateScan}
                         disabled={isScanning}
-                        className="bg-primary-500 text-white py-2 px-4 rounded-full font-medium flex items-center justify-center disabled:opacity-50"
+                        className="bg-primary text-white py-2 px-4 rounded-full font-medium flex items-center justify-center disabled:opacity-50"
                       >
                         {isScanning ? (
-                          <span className="flex items-center"><span className="material-icons mr-2">hourglass_top</span> Scanning...</span>
+                          <span className="flex items-center animate-blink-slow">
+                            <span className="material-icons mr-2">hourglass_top</span> Analyzing product...
+                          </span>
                         ) : (
-                          <span className="flex items-center"><span className="material-icons mr-2">photo_camera</span> Tap to Scan</span>
+                          <span className="flex items-center">
+                            <span className="material-icons mr-2">photo_camera</span> Tap to Scan
+                          </span>
                         )}
                       </button>
                     </div>
@@ -461,7 +482,7 @@ export default function GroceryScanner() {
                   <div className="flex space-x-2">
                     <Input
                       className="flex-1"
-                      placeholder="Search items or scan barcode (try 'Cereal', 'Milk', or enter barcode)"
+                      placeholder="Search for grocery items (try 'Cereal', 'Coffee', 'Eggs', or 'Spinach')"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       onKeyDown={(e) => {
@@ -481,8 +502,8 @@ export default function GroceryScanner() {
                   >
                     <div className="flex flex-col items-center justify-center">
                       <span className="material-icons text-4xl text-neutral-400 mb-2">photo_camera</span>
-                      <span className="font-medium">Tap to Scan Product Barcode</span>
-                      <span className="text-xs text-neutral-500 mt-1">Use your camera to find instant savings</span>
+                      <span className="font-medium">Tap to Scan Products</span>
+                      <span className="text-xs text-neutral-500 mt-1">Use computer vision to find instant savings</span>
                     </div>
                   </Button>
                 </div>
@@ -490,7 +511,7 @@ export default function GroceryScanner() {
               
               {/* Just scanned item alert */}
               {justScanned && (
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 animate-fadeIn">
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 animate-pulse-border">
                   <div className="flex items-start">
                     <div className="bg-white p-2 rounded-md mr-3">
                       <img src={justScanned.image} alt={justScanned.name} className="w-12 h-12 object-contain" />
@@ -502,7 +523,7 @@ export default function GroceryScanner() {
                       </div>
                       
                       {justScanned.alternatives && justScanned.alternatives.length > 0 && (
-                        <div className="flex items-center mt-2">
+                        <div className="flex items-center mt-2 animate-blink-slow">
                           <span className="material-icons text-sm text-amber-500 mr-1">tips_and_updates</span>
                           <span className="text-sm text-amber-700">
                             {justScanned.alternatives[0].recommendation}
@@ -516,7 +537,7 @@ export default function GroceryScanner() {
                       className="text-blue-500"
                       onClick={() => setJustScanned(null)}
                     >
-                      <span className="material-icons">close</span>
+                      <span className="material-icons">check_circle</span>
                     </Button>
                   </div>
                 </div>
