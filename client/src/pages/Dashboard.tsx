@@ -88,8 +88,8 @@ export default function Dashboard({ userId }: DashboardProps) {
           <div>
             <p className="text-sm text-neutral-500">Credit Trend</p>
             <p className="text-lg font-bold flex items-center">
-              <span className="material-icons text-success text-sm mr-1">arrow_upward</span>
-              Improving
+              <span className="material-icons text-danger-500 text-sm mr-1">arrow_downward</span>
+              Declining
             </p>
           </div>
         </div>
@@ -166,8 +166,8 @@ export default function Dashboard({ userId }: DashboardProps) {
               Pro Tip
             </h3>
             <p className="text-sm">
-              Paying your credit card bill twice a month can help lower your credit utilization ratio 
-              and potentially improve your credit score.
+              With your 78% utilization, paying down $2,500 on each card could boost your credit score by 35+ points 
+              within 30-45 days of the payment being reported.
             </p>
             <button className="mt-3 bg-white/20 hover:bg-white/30 text-white rounded-lg px-3 py-1.5 text-xs font-medium flex items-center transition-colors">
               More Tips
@@ -181,7 +181,7 @@ export default function Dashboard({ userId }: DashboardProps) {
       <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={() => {
-            setAiMessage("Hi Alex! I've analyzed your financial data and noticed your Visa Signature card has a high utilization rate (73%). Want some tips on how to improve your credit score?");
+            setAiMessage("Hi Alex! I've analyzed your financial data and noticed some concerning trends with your credit. Your score has dropped to 650, with 78% utilization and 2 late payments in the last year. Would you like some specific recommendations to improve your score?");
             setShowAIChat(true);
           }}
           className="rounded-full w-14 h-14 bg-primary text-white shadow-lg flex items-center justify-center hover:bg-primary-600 transition-colors"

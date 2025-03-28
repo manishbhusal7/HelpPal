@@ -23,19 +23,41 @@ export default function CreditScore({ userId }: CreditScoreProps) {
     );
   }
 
-  // Generate mock historical data for the chart
+  // Generate historical data with realistic downward trend for a 650 score
   const generateHistoricalData = () => {
-    const currentScore = user.creditScore;
+    const currentScore = user.creditScore; // 650
     const now = new Date();
     
-    // Generate data for the last 12 months with some realistic variations
+    // Create a realistic declining trend from 678 nine months ago to current 650
+    const scoreProgressions = [
+      678, // 9 months ago (starting better)
+      673, // 8 months ago
+      676, // 7 months ago (small improvement)
+      671, // 6 months ago
+      665, // 5 months ago
+      662, // 4 months ago
+      658, // 3 months ago
+      654, // 2 months ago
+      652, // 1 month ago
+      650, // Current score
+      null, // Future projection (next month) - will be calculated
+      null  // Future projection (2 months) - will be calculated
+    ];
+    
+    // Add small random variations to make it look realistic
     return Array.from({ length: 12 }).map((_, i) => {
       const month = subMonths(now, 11 - i);
       
-      // Calculate a score that trends toward the current score with some random variations
-      const baseScore = i === 11 ? currentScore : currentScore - 20 + Math.floor(i * 2);
-      const randomVariation = Math.floor(Math.random() * 15) - 5; // -5 to +10
-      const score = Math.max(300, Math.min(850, baseScore + randomVariation));
+      let score;
+      if (i < 10) {
+        // Past and current scores with small variations
+        const variation = Math.floor(Math.random() * 3) - 1; // -1 to +1
+        score = scoreProgressions[i] + variation;
+      } else {
+        // Future projections with continued decline if no action taken
+        const projectedScore = currentScore - (4 + Math.floor(Math.random() * 3)); // -4 to -6 points
+        score = Math.max(580, projectedScore); // Don't let it drop below 580 too quickly
+      }
       
       return {
         month: format(month, 'MMM yyyy'),
@@ -118,56 +140,67 @@ export default function CreditScore({ userId }: CreditScoreProps) {
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-neutral-700">Payment History</span>
-                  <span className="text-sm font-medium text-success-500">Excellent</span>
+                  <span className="text-sm font-medium text-warning-500">Fair</span>
                 </div>
                 <div className="w-full h-2 bg-neutral-100 rounded-full">
-                  <div className="bg-success-500 h-2 rounded-full" style={{ width: "95%" }}></div>
+                  <div className="bg-warning-500 h-2 rounded-full" style={{ width: "68%" }}></div>
                 </div>
-                <p className="text-xs text-neutral-500 mt-1">You've made consistent on-time payments</p>
+                <p className="text-xs text-neutral-500 mt-1">You have 2 late payments in the last 12 months</p>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-neutral-700">Credit Utilization</span>
-                  <span className="text-sm font-medium text-warning-500">Fair</span>
+                  <span className="text-sm font-medium text-danger-500">Poor</span>
                 </div>
                 <div className="w-full h-2 bg-neutral-100 rounded-full">
-                  <div className="bg-warning-500 h-2 rounded-full" style={{ width: "65%" }}></div>
+                  <div className="bg-danger-500 h-2 rounded-full" style={{ width: "78%" }}></div>
                 </div>
-                <p className="text-xs text-neutral-500 mt-1">Your credit utilization is higher than recommended</p>
+                <p className="text-xs text-neutral-500 mt-1">Your 78% utilization is significantly hurting your score</p>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-neutral-700">Credit Age</span>
-                  <span className="text-sm font-medium text-success-500">Good</span>
+                  <span className="text-sm font-medium text-warning-500">Fair</span>
                 </div>
                 <div className="w-full h-2 bg-neutral-100 rounded-full">
-                  <div className="bg-success-500 h-2 rounded-full" style={{ width: "80%" }}></div>
+                  <div className="bg-warning-500 h-2 rounded-full" style={{ width: "60%" }}></div>
                 </div>
-                <p className="text-xs text-neutral-500 mt-1">Average account age is 5 years 3 months</p>
+                <p className="text-xs text-neutral-500 mt-1">Average account age is 2 years 4 months</p>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-neutral-700">Account Mix</span>
-                  <span className="text-sm font-medium text-secondary-500">Very Good</span>
+                  <span className="text-sm font-medium text-warning-500">Fair</span>
                 </div>
                 <div className="w-full h-2 bg-neutral-100 rounded-full">
-                  <div className="bg-secondary-500 h-2 rounded-full" style={{ width: "85%" }}></div>
+                  <div className="bg-warning-500 h-2 rounded-full" style={{ width: "55%" }}></div>
                 </div>
-                <p className="text-xs text-neutral-500 mt-1">You have a good mix of credit types</p>
+                <p className="text-xs text-neutral-500 mt-1">Limited credit types affecting your score</p>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-neutral-700">Recent Inquiries</span>
-                  <span className="text-sm font-medium text-success-500">Excellent</span>
+                  <span className="text-sm font-medium text-warning-500">Fair</span>
                 </div>
                 <div className="w-full h-2 bg-neutral-100 rounded-full">
-                  <div className="bg-success-500 h-2 rounded-full" style={{ width: "90%" }}></div>
+                  <div className="bg-warning-500 h-2 rounded-full" style={{ width: "65%" }}></div>
                 </div>
-                <p className="text-xs text-neutral-500 mt-1">No recent credit inquiries</p>
+                <p className="text-xs text-neutral-500 mt-1">3 credit inquiries in the last 6 months</p>
+              </div>
+              
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium text-neutral-700">Collections Accounts</span>
+                  <span className="text-sm font-medium text-danger-500">Poor</span>
+                </div>
+                <div className="w-full h-2 bg-neutral-100 rounded-full">
+                  <div className="bg-danger-500 h-2 rounded-full" style={{ width: "35%" }}></div>
+                </div>
+                <p className="text-xs text-neutral-500 mt-1">1 active collections account from 2019</p>
               </div>
             </div>
           </CardContent>

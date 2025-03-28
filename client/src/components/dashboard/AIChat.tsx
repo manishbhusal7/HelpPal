@@ -56,56 +56,66 @@ export default function AIChat({ isVisible, onClose, initialMessage }: AIChatPro
     
     // Personalized responses based on common credit score questions
     if (lowerMessage.includes("improve") && lowerMessage.includes("credit")) {
-      response = "Based on your financial data, I recommend these 3 key actions to improve your credit score:\n\n" +
-        "1. Reduce your Visa Signature card utilization from 73% to under 30%. This could add 15-25 points to your score within 60 days.\n\n" +
-        "2. Continue your perfect payment record. Your consistent on-time payments have already added 12 points over the last 6 months.\n\n" +
-        "3. Maintain your older accounts. Your Chase Freedom card is your oldest account at 3.2 years and contributes positively to your credit history length.";
+      response = "Based on your financial data, I recommend these 3 urgent actions to improve your credit score:\n\n" +
+        "1. Reduce your Visa Signature card utilization from 76% to under 30%. This alone could add 30-45 points to your score within 60-90 days.\n\n" +
+        "2. Make all payments on time for the next 6 months. Your 2 late payments in the last year have dropped your score by approximately 60 points.\n\n" +
+        "3. Work on resolving the collections account from 2019. Paying this off could add 15-25 points to your score, especially if you can negotiate a 'pay for delete' arrangement.";
     } 
     else if (lowerMessage.includes("utilization") || (lowerMessage.includes("credit") && lowerMessage.includes("card"))) {
-      response = "Your current credit utilization is 48% overall, which is in the 'moderate risk' category.\n\n" +
+      response = "Your current credit utilization is 78% overall, which is in the 'high risk' category and significantly hurting your score.\n\n" +
         "Card breakdown:\n" +
-        "• Visa Signature: 73% utilized ($4,750 of $6,500 limit) - HIGH\n" +
-        "• Chase Freedom: 23% utilized ($2,980 of $13,000 limit) - GOOD\n\n" +
-        "Recommendation: Transfer at least $2,800 from your Visa Signature to your Chase Freedom card to balance utilization rates. This could improve your score by 15-25 points in the next statement cycle.";
+        "• Visa Signature: 76% utilized ($4,940 of $6,500 limit) - CRITICAL\n" +
+        "• American Express: 80% utilized ($8,000 of $10,000 limit) - CRITICAL\n\n" +
+        "Recommendation: Pay down at least $3,000 on each card to get below 50% utilization as a first step. This could improve your score by 25-40 points in the next statement cycle.";
     }
     else if (lowerMessage.includes("dining") || lowerMessage.includes("restaurant") || lowerMessage.includes("spending")) {
-      response = "I've noticed your dining/restaurant spending has increased 22% in the last 30 days compared to your 3-month average.\n\n" +
+      response = "I've noticed your dining/restaurant spending has increased 42% in the last 30 days compared to your 3-month average, which is concerning given your high utilization.\n\n" +
         "Recent transactions include:\n" +
-        "• Mar 18: Cheesecake Factory - $78.45\n" +
-        "• Mar 15: Starbucks (3 visits) - $16.85\n" +
-        "• Mar 10: Local Bistro - $124.30\n\n" +
-        "This increased spending is directly affecting your Visa Signature card utilization. Consider using your Chase Freedom card for dining in the next 30 days to balance your utilization.";
+        "• Mar 24: Olive Garden - $96.75\n" +
+        "• Mar 20: Starbucks (5 visits) - $32.45\n" +
+        "• Mar 16: Applebee's - $115.20\n" +
+        "• Mar 14: Food delivery apps - $86.93\n\n" +
+        "This increased spending is directly contributing to your high credit utilization. Consider creating a strict dining budget of $200/month until your cards are below 50% utilization.";
     }
     else if (lowerMessage.includes("payment") || lowerMessage.includes("history")) {
-      response = "Your payment history is excellent! You have:\n\n" +
-        "• 36 consecutive on-time payments\n" +
-        "• No late payments in your history\n" +
-        "• Consistent payment amounts above the minimum required\n\n" +
-        "Your payment history accounts for about 35% of your credit score calculation and is your strongest category. This excellent behavior has contributed approximately +42 points to your overall score.";
+      response = "Your payment history needs immediate attention:\n\n" +
+        "• 2 late payments in the last 12 months (January and October)\n" +
+        "• 65% of payments made on time in the past year\n" +
+        "• 4 payments made just 1-3 days before due date (high risk)\n\n" +
+        "Payment history accounts for about 35% of your credit score calculation, and your late payments have reduced your score by approximately 60 points. Setting up automatic payments could prevent further damage.";
     }
     else if (lowerMessage.includes("credit age") || lowerMessage.includes("account age")) {
       response = "Your credit accounts have the following ages:\n\n" +
-        "• Chase Freedom: 3.2 years\n" +
-        "• Visa Signature: 1.6 years\n\n" +
-        "Your average account age is 2.4 years, which is in the 'Fair' category. Credit history length typically accounts for about 15% of your credit score.\n\n" +
-        "Recommendation: Maintain all current accounts in good standing, as closing your oldest account would negatively impact your score.";
+        "• American Express: 2.8 years\n" +
+        "• Visa Signature: 1.9 years\n\n" +
+        "Your average account age is 2.35 years, which is in the 'Fair' category. Credit history length typically accounts for about 15% of your credit score.\n\n" +
+        "Recommendation: Do not open any new credit accounts in the next 12 months, as this would lower your average age further. Maintain your existing accounts in good standing.";
+    }
+    else if (lowerMessage.includes("collection") || lowerMessage.includes("debt")) {
+      response = "Your collections account from 2019:\n\n" +
+        "• Original creditor: Regional Medical Center\n" +
+        "• Current collector: Midland Credit Management\n" +
+        "• Original amount: $1,240\n" +
+        "• Current balance: $1,876 (with fees and interest)\n\n" +
+        "This account is significantly impacting your score (-45 to -65 points). Contact the collector to negotiate a settlement for less than the full amount, and request a 'pay for delete' agreement where they remove the item from your credit report upon payment.";
     }
     else if (lowerMessage.includes("score")) {
       response = "Your credit score timeline:\n\n" +
-        "• 3 months ago: 715 (Good)\n" +
-        "• Current: 736 (Good)\n" +
-        "• Potential in 90 days: 778 (Very Good)\n\n" +
-        "Recent changes:\n" +
-        "• Payment History: +2 points\n" +
-        "• Credit Age: +5 points\n" +
-        "• Credit Mix: No change\n" +
-        "• Credit Utilization: -3 points\n\n" +
-        "By following all our recommendations, you could improve by approximately 27-42 points within 90 days.";
+        "• 9 months ago: 678 (Fair)\n" +
+        "• 6 months ago: 671 (Fair)\n" +
+        "• 3 months ago: 658 (Fair)\n" +
+        "• Current: 650 (Fair)\n" +
+        "• Projection if no action: ~644 in 30 days\n\n" +
+        "Recent negative factors:\n" +
+        "• Payment History: -18 points (late payment)\n" +
+        "• Increased Credit Utilization: -12 points\n" +
+        "• Recent Credit Inquiries: -8 points\n\n" +
+        "By following our recommendations, you could improve by approximately 50-75 points within 6 months, potentially reaching 700+.";
     }
     else {
-      response = "I'd be happy to help with that, Alex. Based on your recent credit activity, your score has improved by 7 points in the last 30 days to 736, placing you in the 'Good' category.\n\n" +
-        "Your biggest opportunity is reducing your Visa Signature card utilization from 73% to under 30%, which could add 15-25 points to your score.\n\n" +
-        "Is there a specific aspect of your credit you'd like me to analyze in more detail? You can ask about utilization, payment history, account age, or specific recommendations.";
+      response = "I'd be happy to help with that, Alex. Based on your recent credit activity, your score has dropped by 28 points over the last 9 months to 650, placing you in the 'Fair' category.\n\n" +
+        "Your most urgent issues are your 78% credit utilization rate, two late payments in the last year, and an active collections account from 2019.\n\n" +
+        "Is there a specific aspect of your credit you'd like me to analyze in more detail? You can ask about utilization, payment history, collections accounts, or specific recommendations.";
     }
     
     // Add AI response to chat
