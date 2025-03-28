@@ -536,14 +536,78 @@ export default function GroceryScanner() {
                       </div>
                       
                       {justScanned.alternatives && justScanned.alternatives.length > 0 && (
-                        <div className="mt-2 p-2 bg-amber-50 border border-amber-100 rounded-md">
-                          <div className="flex items-center mb-1">
-                            <span className="material-icons text-sm text-amber-500 mr-1">tips_and_updates</span>
-                            <span className="text-xs font-medium text-amber-800">SAVINGS OPPORTUNITY</span>
+                        <div className="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-md">
+                          <div className="flex items-center mb-2">
+                            <div className="p-1 bg-amber-100 rounded-full mr-2">
+                              <span className="material-icons text-amber-600" style={{ fontSize: '16px' }}>compare_arrows</span>
+                            </div>
+                            <span className="text-sm font-medium text-amber-800">Better Option Found</span>
                           </div>
-                          <p className="text-sm text-amber-700 animate-blink-slow">
+                          <div className="flex items-start mb-2">
+                            <div className="bg-white p-1 rounded border border-amber-200 mr-2">
+                              <img src={justScanned.alternatives[0].image} alt={justScanned.alternatives[0].name} 
+                                className="w-10 h-10 object-contain" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-neutral-800">{justScanned.alternatives[0].name}</p>
+                              <div className="flex items-center">
+                                <p className="text-sm text-green-600 font-medium">${justScanned.alternatives[0].price.toFixed(2)}</p>
+                                <div className="mx-2 px-1.5 py-0.5 bg-green-100 rounded text-xs text-green-700">
+                                  Save ${(justScanned.price - justScanned.alternatives[0].price).toFixed(2)}
+                                </div>
+                              </div>
+                              {justScanned.alternatives[0].coupon && (
+                                <div className="flex items-center mt-1">
+                                  <span className="material-icons text-xs text-blue-500 mr-1">local_offer</span>
+                                  <span className="text-xs text-blue-600">{justScanned.alternatives[0].coupon}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-xs text-neutral-500">
                             {justScanned.alternatives[0].recommendation}
                           </p>
+                          <div className="mt-2 flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className="p-1 bg-green-100 rounded-full mr-1">
+                                <span className="material-icons text-green-600" style={{ fontSize: '14px' }}>eco</span>
+                              </div>
+                              <span className="text-xs text-green-700">Better environmental choice</span>
+                            </div>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-7 text-xs"
+                              onClick={() => {
+                                // When the user clicks to add the alternative, we'll replace the original
+                                // with the alternative in their list and show a toast
+                                const alt = justScanned?.alternatives?.[0];
+                                if (justScanned && alt) {
+                                  // Remove the original
+                                  setScannedItems(prevItems => 
+                                    prevItems.filter(item => item.id !== justScanned.id)
+                                  );
+                                  
+                                  // Add the alternative
+                                  setScannedItems(prevItems => [...prevItems, alt]);
+                                  
+                                  // Close the "just scanned" card
+                                  setJustScanned(null);
+                                  
+                                  // Show success toast
+                                  toast({
+                                    title: "Smart Swap Applied!",
+                                    description: `Added ${alt.name} instead of ${justScanned.name}, saving $${(justScanned.price - alt.price).toFixed(2)}`,
+                                    variant: "default",
+                                  });
+                                }
+                              }}
+                            >
+                              <span className="flex items-center">
+                                <span className="material-icons text-xs mr-1">shopping_cart_checkout</span> Choose Instead
+                              </span>
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -621,9 +685,14 @@ export default function GroceryScanner() {
                         
                         {item.alternatives && item.alternatives.length > 0 && (
                           <div className="bg-neutral-50 p-4">
-                            <div className="text-sm font-medium mb-3 flex items-center">
-                              <span className="material-icons text-amber-500 mr-1">lightbulb</span>
-                              <span className="text-neutral-700">Cheaper Alternatives</span>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center">
+                                <div className="p-1 bg-amber-100 rounded-full mr-2">
+                                  <span className="material-icons text-amber-600" style={{ fontSize: '16px' }}>compare</span>
+                                </div>
+                                <span className="text-sm font-medium text-neutral-700">Similar Products for Less</span>
+                              </div>
+                              <div className="text-xs text-neutral-500">Sorted by best value</div>
                             </div>
                             
                             <div className="space-y-3">
@@ -638,23 +707,39 @@ export default function GroceryScanner() {
                                       <div className="flex justify-between">
                                         <div>
                                           <h5 className="font-medium text-sm">{alt.name}</h5>
-                                          <div className="text-sm text-neutral-600">
-                                            ${alt.price.toFixed(2)} at {alt.store}
+                                          <div className="flex items-center">
+                                            <div className="text-sm text-neutral-600 font-medium mr-2">
+                                              ${alt.price.toFixed(2)}
+                                            </div>
+                                            <div className="text-xs text-neutral-500 line-through">
+                                              ${item.price.toFixed(2)}
+                                            </div>
+                                          </div>
+                                          <div className="text-xs text-neutral-500 mt-0.5">
+                                            Available at {alt.store}
                                           </div>
                                           {alt.coupon && (
-                                            <div className="flex items-center mt-1">
-                                              <span className="material-icons text-xs text-green-500 mr-1">local_offer</span>
-                                              <span className="text-xs text-green-600">{alt.coupon}</span>
+                                            <div className="flex items-center mt-1 bg-blue-50 py-0.5 px-1.5 rounded-sm w-fit">
+                                              <span className="material-icons text-xs text-blue-500 mr-1">local_offer</span>
+                                              <span className="text-xs text-blue-600">{alt.coupon}</span>
                                             </div>
                                           )}
                                         </div>
                                         
-                                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100 h-fit" variant="outline">
-                                          Save {alt.savings}%
-                                        </Badge>
+                                        <div className="flex flex-col items-end">
+                                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100 mb-1" variant="outline">
+                                            <span className="flex items-center">
+                                              <span className="material-icons mr-0.5" style={{ fontSize: '12px' }}>trending_down</span>
+                                              {alt.savings}% less
+                                            </span>
+                                          </Badge>
+                                          <div className="text-xs text-green-600 font-medium">
+                                            Save ${(item.price - alt.price).toFixed(2)}
+                                          </div>
+                                        </div>
                                       </div>
                                       
-                                      <div className="mt-2 text-xs text-neutral-500">
+                                      <div className="mt-2 text-xs text-neutral-600 border-t border-neutral-100 pt-2">
                                         {alt.recommendation}
                                       </div>
                                       
@@ -671,7 +756,7 @@ export default function GroceryScanner() {
                                             </span>
                                           ) : (
                                             <span className="flex items-center">
-                                              <span className="material-icons text-sm mr-1">swap_horiz</span> Switch & Save
+                                              <span className="material-icons text-sm mr-1">shopping_cart_checkout</span> Choose This Instead
                                             </span>
                                           )}
                                         </Button>
