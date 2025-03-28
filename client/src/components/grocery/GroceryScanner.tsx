@@ -457,14 +457,31 @@ export default function GroceryScanner() {
     setScanProgress(0);
     
     // Start progress animation
-    const totalScanTime = 20000; // Total scan time in milliseconds
+    const initialScanTime = 5000; // Initial scan animation time (5 seconds)
+    const totalScanTime = 20000; // Total processing time including all stages
     const progressUpdateInterval = 200; // Update progress every 200ms
-    const progressIncrement = 100 / (totalScanTime / progressUpdateInterval);
     
-    // Progress animation interval
+    // First phase is slower (0-30% in 5 seconds)
+    // Then it speeds up for the technical analysis phases
+    const initialProgressIncrement = 30 / (initialScanTime / progressUpdateInterval); // 30% in 5 seconds
+    const remainingProgressIncrement = 69 / ((totalScanTime - initialScanTime) / progressUpdateInterval); // Remaining 69% in the rest of the time (saving 1% for completion)
+    
+    // Progress animation interval - two phases with different speeds
+    let inInitialPhase = true;
+    const startTime = Date.now();
+    
     const progressInterval = setInterval(() => {
+      const elapsedTime = Date.now() - startTime;
+      
+      // Check if we're still in the initial slow scanning phase
+      if (inInitialPhase && elapsedTime >= initialScanTime) {
+        inInitialPhase = false;
+      }
+      
       setScanProgress(prev => {
-        const newProgress = Math.min(prev + progressIncrement, 99); // Cap at 99% until completion
+        // Use different increment rates for different phases
+        const increment = inInitialPhase ? initialProgressIncrement : remainingProgressIncrement;
+        const newProgress = Math.min(prev + increment, 99); // Cap at 99% until completion
         return newProgress;
       });
     }, progressUpdateInterval);
