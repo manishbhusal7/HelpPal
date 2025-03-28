@@ -1,13 +1,49 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { format, subMonths } from "date-fns";
+import { 
+  ResponsiveContainer, 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip,
+  TooltipProps,
+  ReferenceLine,
+  Label,
+  ReferenceArea 
+} from "recharts";
 
 interface CreditScoreProps {
   userId: number | undefined;
 }
 
+// Define data interfaces
+interface User {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  avatarInitials: string;
+  creditScore: number;
+  creditScoreStatus: string;
+}
+
+interface ScoreHistoryPoint {
+  month: string;
+  score: number;
+}
+
+interface ScoreRange {
+  y1: number;
+  y2: number;
+  label: string;
+  color: string;
+}
+
 export default function CreditScore({ userId }: CreditScoreProps) {
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading } = useQuery<User>({
     queryKey: [`/api/users/${userId}`],
     enabled: !!userId
   });
@@ -24,12 +60,12 @@ export default function CreditScore({ userId }: CreditScoreProps) {
   }
 
   // Generate historical data with realistic downward trend for a 650 score
-  const generateHistoricalData = () => {
+  const generateHistoricalData = (): ScoreHistoryPoint[] => {
     const currentScore = user.creditScore; // 650
     const now = new Date();
     
     // Create a realistic declining trend from 678 nine months ago to current 650
-    const scoreProgressions = [
+    const scoreProgressions: (number | null)[] = [
       678, // 9 months ago (starting better)
       673, // 8 months ago
       676, // 7 months ago (small improvement)
@@ -48,11 +84,12 @@ export default function CreditScore({ userId }: CreditScoreProps) {
     return Array.from({ length: 12 }).map((_, i) => {
       const month = subMonths(now, 11 - i);
       
-      let score;
+      let score: number;
       if (i < 10) {
         // Past and current scores with small variations
         const variation = Math.floor(Math.random() * 3) - 1; // -1 to +1
-        score = scoreProgressions[i] + variation;
+        const baseScore = scoreProgressions[i] !== null ? scoreProgressions[i] as number : 650;
+        score = baseScore + variation;
       } else {
         // Future projections with continued decline if no action taken
         const projectedScore = currentScore - (4 + Math.floor(Math.random() * 3)); // -4 to -6 points
@@ -67,6 +104,32 @@ export default function CreditScore({ userId }: CreditScoreProps) {
   };
 
   const historicalData = generateHistoricalData();
+
+  // Define score range data for the chart
+  const scoreRanges = [
+    { y1: 800, y2: 850, label: "Excellent", color: "#10B981" }, // Emerald 
+    { y1: 740, y2: 799, label: "Very Good", color: "#22C55E" }, // Green
+    { y1: 670, y2: 739, label: "Good", color: "#84CC16" },      // Lime
+    { y1: 580, y2: 669, label: "Fair", color: "#F59E0B" },      // Amber
+    { y1: 300, y2: 579, label: "Poor", color: "#EF4444" }       // Red
+  ];
+
+  // Format tooltip for the chart
+  const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white p-3 shadow-lg rounded-md border border-neutral-200">
+          <p className="text-sm font-semibold">{data.month}</p>
+          <p className="text-sm text-neutral-700">Score: <span className="font-medium">{data.score}</span></p>
+          <p className="text-xs text-neutral-500 mt-1">
+            {data.score >= 670 ? "Good standing" : data.score >= 580 ? "Action needed" : "Critical attention required"}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   const creditScoreRanges = [
     { range: "300-579", label: "Poor", color: "bg-red-500" },
@@ -210,59 +273,109 @@ export default function CreditScore({ userId }: CreditScoreProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">Credit Score History</CardTitle>
-          <CardDescription>Your score over the last 12 months</CardDescription>
+          <CardDescription>Your score over the last 12 months with future projection</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
-            <svg viewBox="0 0 800 300" className="w-full h-full">
-              {/* X and Y axis */}
-              <line x1="50" y1="250" x2="750" y2="250" stroke="#E1E4E8" strokeWidth="1" />
-              <line x1="50" y1="50" x2="50" y2="250" stroke="#E1E4E8" strokeWidth="1" />
-              
-              {/* Score ranges background */}
-              <rect x="50" y="50" width="700" height="40" fill="#EF4444" fillOpacity="0.1" />
-              <rect x="50" y="90" width="700" height="40" fill="#F59E0B" fillOpacity="0.1" />
-              <rect x="50" y="130" width="700" height="40" fill="#84CC16" fillOpacity="0.1" />
-              <rect x="50" y="170" width="700" height="40" fill="#22C55E" fillOpacity="0.1" />
-              <rect x="50" y="210" width="700" height="40" fill="#10B981" fillOpacity="0.1" />
-              
-              {/* Score ranges labels */}
-              <text x="40" y="60" fontSize="10" textAnchor="end" fill="#6B7280">850</text>
-              <text x="40" y="100" fontSize="10" textAnchor="end" fill="#6B7280">800</text>
-              <text x="40" y="140" fontSize="10" textAnchor="end" fill="#6B7280">740</text>
-              <text x="40" y="180" fontSize="10" textAnchor="end" fill="#6B7280">670</text>
-              <text x="40" y="220" fontSize="10" textAnchor="end" fill="#6B7280">580</text>
-              <text x="40" y="260" fontSize="10" textAnchor="end" fill="#6B7280">300</text>
-              
-              {/* Data points and line */}
-              {historicalData.map((point, i) => {
-                const x = 80 + i * 60;
-                // Map score from 300-850 to 250-50 on the y-axis (inverted for SVG)
-                const y = 250 - ((point.score - 300) / 550) * 200;
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={historicalData}
+                margin={{ top: 20, right: 5, left: 5, bottom: 30 }}
+              >
+                {/* Create background areas for each credit score range */}
+                {scoreRanges.map((range, i) => (
+                  <ReferenceArea
+                    key={i}
+                    y1={range.y1}
+                    y2={range.y2}
+                    fill={range.color}
+                    fillOpacity={0.08}
+                    strokeOpacity={0}
+                  >
+                    <Label
+                      value={range.label}
+                      position="insideRight"
+                      fill={'#64748b'}
+                      fontSize={11}
+                      offset={5}
+                    />
+                  </ReferenceArea>
+                ))}
+
+                {/* Create the gradient for the area under the line */}
+                <defs>
+                  <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+
+                {/* Grid lines in the background */}
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                 
-                return (
-                  <g key={i}>
-                    <circle cx={x} cy={y} r="4" fill="#1976D2" />
-                    {i > 0 && (
-                      <line 
-                        x1={80 + (i-1) * 60} 
-                        y1={250 - ((historicalData[i-1].score - 300) / 550) * 200} 
-                        x2={x} 
-                        y2={y} 
-                        stroke="#1976D2" 
-                        strokeWidth="2" 
-                      />
-                    )}
-                    <text x={x} y="270" fontSize="10" textAnchor="middle" fill="#6B7280">
-                      {point.month}
-                    </text>
-                    <text x={x} y={y - 10} fontSize="10" textAnchor="middle" fill="#374151">
-                      {point.score}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
+                {/* X and Y axes */}
+                <XAxis 
+                  dataKey="month" 
+                  tickLine={false} 
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                  tickMargin={10}
+                />
+                <YAxis 
+                  domain={[300, 850]} 
+                  ticks={[300, 580, 670, 740, 800, 850]} 
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                  tickMargin={5}
+                />
+
+                {/* Current score reference line */}
+                <ReferenceLine
+                  y={user.creditScore}
+                  stroke="#fb7185"
+                  strokeWidth={1.5}
+                  strokeDasharray="3 3"
+                >
+                  <Label
+                    value="Current: 650"
+                    position="right"
+                    fill="#fb7185"
+                    fontSize={11}
+                  />
+                </ReferenceLine>
+
+                {/* Tooltips and actual chart data */}
+                <Tooltip content={<CustomTooltip />} />
+                
+                {/* Show data as an area chart with gradient */}
+                <Area 
+                  type="monotone"
+                  dataKey="score"
+                  stroke="#3b82f6"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#scoreGradient)"
+                  activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
+                  dot={{ r: 3, strokeWidth: 2, stroke: '#fff', fill: '#3b82f6' }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+              <span className="text-neutral-600">Historical Score</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 border-2 border-dashed border-rose-400 mr-2"></div>
+              <span className="text-neutral-600">Current: {user.creditScore}</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-amber-400 mr-2"></div>
+              <span className="text-neutral-600">Future Projection</span>
+            </div>
           </div>
         </CardContent>
       </Card>
