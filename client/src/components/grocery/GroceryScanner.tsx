@@ -456,31 +456,35 @@ export default function GroceryScanner() {
     // Reset scan progress
     setScanProgress(0);
     
-    // Start progress animation
-    const initialScanTime = 5000; // Initial scan animation time (5 seconds)
-    const totalScanTime = 20000; // Total processing time including all stages
-    const progressUpdateInterval = 200; // Update progress every 200ms
+    // Start progress animation - focus on a 5-second total scanning time
+    const totalScanTime = 5000; // Total scan time of 5 seconds
+    const progressUpdateInterval = 100; // Update progress every 100ms for smoother animation
     
-    // First phase is slower (0-30% in 5 seconds)
-    // Then it speeds up for the technical analysis phases
-    const initialProgressIncrement = 30 / (initialScanTime / progressUpdateInterval); // 30% in 5 seconds
-    const remainingProgressIncrement = 69 / ((totalScanTime - initialScanTime) / progressUpdateInterval); // Remaining 69% in the rest of the time (saving 1% for completion)
+    // Create two phases - slow to 80%, then faster for the remaining 19%
+    // We'll save the final 1% for the completion callback
+    const slowPhaseTarget = 80; // Progress slowly to 80%
+    const slowPhaseTime = 4000; // Take 4 seconds to reach 80%
+    const fastPhaseTime = totalScanTime - slowPhaseTime; // 1 second for the remaining progress
+    
+    // Calculate increments for each phase
+    const slowIncrement = slowPhaseTarget / (slowPhaseTime / progressUpdateInterval);
+    const fastIncrement = 19 / (fastPhaseTime / progressUpdateInterval); // Remaining 19% in the final second
     
     // Progress animation interval - two phases with different speeds
-    let inInitialPhase = true;
+    let inSlowPhase = true;
     const startTime = Date.now();
     
     const progressInterval = setInterval(() => {
       const elapsedTime = Date.now() - startTime;
       
-      // Check if we're still in the initial slow scanning phase
-      if (inInitialPhase && elapsedTime >= initialScanTime) {
-        inInitialPhase = false;
+      // Check if we should transition to the fast phase
+      if (inSlowPhase && elapsedTime >= slowPhaseTime) {
+        inSlowPhase = false;
       }
       
       setScanProgress(prev => {
-        // Use different increment rates for different phases
-        const increment = inInitialPhase ? initialProgressIncrement : remainingProgressIncrement;
+        // Use different increment rates based on the phase
+        const increment = inSlowPhase ? slowIncrement : fastIncrement;
         const newProgress = Math.min(prev + increment, 99); // Cap at 99% until completion
         return newProgress;
       });
