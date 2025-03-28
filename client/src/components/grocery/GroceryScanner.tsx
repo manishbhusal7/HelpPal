@@ -228,6 +228,7 @@ export default function GroceryScanner() {
   const [activeTab, setActiveTab] = useState("scanner");
   const [justScanned, setJustScanned] = useState<any>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState(false);
   
   const cameraRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
@@ -329,48 +330,61 @@ export default function GroceryScanner() {
     // First show flash/camera shutter effect
     toast({
       title: "Image Captured",
-      description: "Processing photo...",
+      description: "Photo taken successfully",
       duration: 1500,
     });
     
-    // Mock scanning process with more realistic three-step timing
+    // Set a state to show the captured image is frozen in the UI
+    setCapturedPhoto(true);
+    
+    // Create a separate phase-based scanning process
+    // Phase 1: Freeze frame for 4 seconds (the camera capture phase)
     setTimeout(() => {
-      // Step 1: Show initial detection phase
+      // Phase 2: Initial product detection (2 seconds)
       toast({
-        title: "Product Detected",
-        description: "Identifying product features...",
-        duration: 1500,
+        title: "Processing Image",
+        description: "Analyzing product features and dimensions...",
+        duration: 2000,
       });
       
-      // Step 2: Show product recognition
       setTimeout(() => {
+        // Phase 3: Brand and product identification (2 seconds)
         // Randomly select an item from the database to "scan"
         const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
         const scannedItem = groceryDatabase[randomIndex];
         
         toast({
           title: `${scannedItem.name} Identified`,
-          description: "Comparing prices across 8 local stores...",
+          description: "Reading nutrition facts and price information...",
           duration: 2000,
         });
         
-        // Step 3: Show price comparison results
         setTimeout(() => {
-          // Add detailed toast with nutritional comparison or other details
-          if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
-            toast({
-              title: "Price Analysis Complete",
-              description: `Found ${scannedItem.alternatives.length} alternatives with potential savings up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
-              duration: 2500,
-            });
-          }
+          // Phase 4: Price comparison (2.5 seconds)
+          toast({
+            title: "Checking Competitor Prices",
+            description: "Scanning 8 nearby stores for better deals...",
+            duration: 2500,
+          });
           
-          // Finally add the item
-          handleItemFound(scannedItem);
-          setIsScanning(false);
-        }, 1500);
-      }, 1500);
-    }, 1000);
+          setTimeout(() => {
+            // Phase 5: Results and recommendations
+            if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
+              toast({
+                title: "Savings Opportunity Found",
+                description: `Found ${scannedItem.alternatives.length} alternatives with savings up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
+                duration: 3000,
+              });
+            }
+            
+            // Finally add the item and clear states
+            handleItemFound(scannedItem);
+            setIsScanning(false);
+            setCapturedPhoto(false);
+          }, 2500);
+        }, 2000);
+      }, 2000);
+    }, 4000); // First keep the capture frozen for 4 seconds
   };
 
   const selectAlternative = (original: any, alternative: any) => {
@@ -466,6 +480,33 @@ export default function GroceryScanner() {
                         <div className="animate-scanner" />
                         {/* Camera flash animation */}
                         <div className="absolute inset-0 bg-white opacity-0 animate-camera-flash" />
+                        
+                        {/* Photo captured freeze frame overlay */}
+                        {capturedPhoto && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-between p-4">
+                            <div className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg">
+                              <div className="flex items-center">
+                                <span className="material-icons text-red-500 mr-2 animate-pulse">lens</span>
+                                <span className="font-medium">Photo Captured</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex mt-auto w-full justify-between">
+                              <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded text-xs">
+                                <span className="flex items-center">
+                                  <span className="material-icons text-xs mr-1">aspect_ratio</span>
+                                  Product detected
+                                </span>
+                              </div>
+                              <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded text-xs">
+                                <span className="flex items-center">
+                                  <span className="material-icons text-xs mr-1">lightbulb</span>
+                                  Identifying product...
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </>
                     )}
                     
