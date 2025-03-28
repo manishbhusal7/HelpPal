@@ -361,7 +361,7 @@ export default function GroceryScanner() {
       // First show flash/camera shutter effect
       toast({
         title: "Image Captured",
-        description: "Photo taken successfully",
+        description: "Photo taken successfully. Processing...",
         duration: 1500,
       });
       
@@ -408,11 +408,20 @@ export default function GroceryScanner() {
                 });
               }
               
-              // Finally add the item and clear states
-              handleItemFound(scannedItem);
+              // Set the captured photo as the justScanned image (to display the actual photo taken)
+              const enhancedScannedItem = {
+                ...scannedItem,
+                capturedPhotoUrl: photoUrl, // Store the actual photo that was taken
+                showCapturedPhoto: true // Flag to indicate we should show the real photo
+              };
+              
+              // Finally add the item and set justScanned to our enhanced item
+              setScannedItems([...scannedItems, enhancedScannedItem]);
+              setJustScanned(enhancedScannedItem);
+              
+              // Reset scanning states but not the photo URL so we can display it
               setIsScanning(false);
               setCapturedPhoto(false);
-              setCapturedPhotoUrl(null);
             }, 2500);
           }, 2000);
         }, 2000);
@@ -721,105 +730,158 @@ export default function GroceryScanner() {
               {/* Just scanned item alert */}
               {justScanned && (
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 animate-pulse-border">
-                  <div className="flex items-start">
-                    <div className="bg-white p-2 rounded-md mr-3 border border-blue-200">
-                      <img src={justScanned.image} alt={justScanned.name} className="w-12 h-12 object-contain" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <h4 className="font-medium text-blue-900">{justScanned.name}</h4>
-                        <Badge className="ml-2 bg-blue-200 text-blue-800 hover:bg-blue-200" variant="outline">
-                          Detected
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-blue-700 font-medium">
-                        ${justScanned.price.toFixed(2)} at {justScanned.store}
-                      </div>
-                      
-                      {justScanned.alternatives && justScanned.alternatives.length > 0 && (
-                        <div className="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-md">
-                          <div className="flex items-center mb-2">
-                            <div className="p-1 bg-amber-100 rounded-full mr-2">
-                              <span className="material-icons text-amber-600" style={{ fontSize: '16px' }}>compare_arrows</span>
-                            </div>
-                            <span className="text-sm font-medium text-amber-800">Better Option Found</span>
-                          </div>
-                          <div className="flex items-start mb-2">
-                            <div className="bg-white p-1 rounded border border-amber-200 mr-2">
-                              <img src={justScanned.alternatives[0].image} alt={justScanned.alternatives[0].name} 
-                                className="w-10 h-10 object-contain" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-neutral-800">{justScanned.alternatives[0].name}</p>
-                              <div className="flex items-center">
-                                <p className="text-sm text-green-600 font-medium">${justScanned.alternatives[0].price.toFixed(2)}</p>
-                                <div className="mx-2 px-1.5 py-0.5 bg-green-100 rounded text-xs text-green-700">
-                                  Save ${(justScanned.price - justScanned.alternatives[0].price).toFixed(2)}
-                                </div>
-                              </div>
-                              {justScanned.alternatives[0].coupon && (
-                                <div className="flex items-center mt-1">
-                                  <span className="material-icons text-xs text-blue-500 mr-1">local_offer</span>
-                                  <span className="text-xs text-blue-600">{justScanned.alternatives[0].coupon}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-xs text-neutral-500">
-                            {justScanned.alternatives[0].recommendation}
-                          </p>
-                          <div className="mt-2 flex justify-between items-center">
-                            <div className="flex items-center">
-                              <div className="p-1 bg-green-100 rounded-full mr-1">
-                                <span className="material-icons text-green-600" style={{ fontSize: '14px' }}>eco</span>
-                              </div>
-                              <span className="text-xs text-green-700">Better environmental choice</span>
-                            </div>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="h-7 text-xs"
-                              onClick={() => {
-                                // When the user clicks to add the alternative, we'll replace the original
-                                // with the alternative in their list and show a toast
-                                const alt = justScanned?.alternatives?.[0];
-                                if (justScanned && alt) {
-                                  // Remove the original
-                                  setScannedItems(prevItems => 
-                                    prevItems.filter(item => item.id !== justScanned.id)
-                                  );
-                                  
-                                  // Add the alternative
-                                  setScannedItems(prevItems => [...prevItems, alt]);
-                                  
-                                  // Close the "just scanned" card
-                                  setJustScanned(null);
-                                  
-                                  // Show success toast
-                                  toast({
-                                    title: "Smart Swap Applied!",
-                                    description: `Added ${alt.name} instead of ${justScanned.name}, saving $${(justScanned.price - alt.price).toFixed(2)}`,
-                                    variant: "default",
-                                  });
-                                }
-                              }}
-                            >
-                              <span className="flex items-center">
-                                <span className="material-icons text-xs mr-1">shopping_cart_checkout</span> Choose Instead
-                              </span>
-                            </Button>
+                  <div className="flex flex-col">
+                    <div className="flex items-start">
+                      {/* Show the captured photo if available, otherwise show the icon */}
+                      {justScanned.showCapturedPhoto && justScanned.capturedPhotoUrl ? (
+                        <div className="rounded-md mr-3 border border-blue-200 overflow-hidden" style={{ width: '120px', height: '90px' }}>
+                          <img 
+                            src={justScanned.capturedPhotoUrl} 
+                            alt={`Photo of ${justScanned.name}`} 
+                            className="w-full h-full object-cover" 
+                          />
+                          <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1.5 py-0.5">
+                            Your Photo
                           </div>
                         </div>
+                      ) : (
+                        <div className="bg-white p-2 rounded-md mr-3 border border-blue-200">
+                          <img src={justScanned.image} alt={justScanned.name} className="w-16 h-16 object-contain" />
+                        </div>
                       )}
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <h4 className="font-medium text-blue-900">{justScanned.name}</h4>
+                          <Badge className="ml-2 bg-blue-200 text-blue-800 hover:bg-blue-200" variant="outline">
+                            Detected
+                          </Badge>
+                        </div>
+                        
+                        <div className="text-sm text-blue-700 font-medium">
+                          ${justScanned.price.toFixed(2)} at {justScanned.store}
+                        </div>
+                        
+                        <div className="flex items-center mt-1 text-xs text-neutral-500">
+                          <span className="material-icons text-xs mr-1.5 text-neutral-400">history</span>
+                          Identified {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-500"
+                        onClick={() => setJustScanned(null)}
+                      >
+                        <span className="material-icons">check_circle</span>
+                      </Button>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-blue-500"
-                      onClick={() => setJustScanned(null)}
-                    >
-                      <span className="material-icons">check_circle</span>
-                    </Button>
+                    
+                    {/* Alternatives with larger images */}
+                    {justScanned.alternatives && justScanned.alternatives.length > 0 && (
+                      <div className="mt-4">
+                        <div className="flex items-center mb-2">
+                          <div className="p-1 bg-amber-100 rounded-full mr-2">
+                            <span className="material-icons text-amber-600">savings</span>
+                          </div>
+                          <span className="font-medium text-amber-800">Savings Opportunities</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                          {justScanned.alternatives.map((alt: any, index: number) => (
+                            <div key={alt.id} className="bg-white rounded-lg border border-amber-200 overflow-hidden">
+                              <div className="bg-amber-50 px-3 py-2 border-b border-amber-100 flex justify-between items-center">
+                                <span className="font-medium text-amber-800">{alt.name}</span>
+                                <Badge className="bg-green-100 text-green-700">
+                                  Save ${(justScanned.price - alt.price).toFixed(2)}
+                                </Badge>
+                              </div>
+                              
+                              <div className="p-3">
+                                <div className="flex items-start">
+                                  <div className="bg-white mr-3 rounded border border-neutral-200 p-1" style={{ minWidth: '80px', height: '80px' }}>
+                                    <img 
+                                      src={alt.image} 
+                                      alt={alt.name} 
+                                      className="w-full h-full object-contain" 
+                                    />
+                                  </div>
+                                  
+                                  <div className="flex-1">
+                                    <div className="flex items-baseline">
+                                      <span className="text-green-600 font-medium">${alt.price.toFixed(2)}</span>
+                                      <span className="text-neutral-400 text-xs line-through ml-2">
+                                        ${justScanned.price.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    
+                                    <p className="text-xs text-neutral-600 mt-1 leading-snug">
+                                      {alt.recommendation}
+                                    </p>
+                                    
+                                    {alt.coupon && (
+                                      <div className="flex items-center mt-2 bg-blue-50 rounded-sm px-2 py-1">
+                                        <span className="material-icons text-xs text-blue-500 mr-1">local_offer</span>
+                                        <span className="text-xs text-blue-600">{alt.coupon}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-3 flex justify-between items-center">
+                                  <div className="flex items-center">
+                                    <div className="p-1 bg-green-100 rounded-full mr-1">
+                                      <span className="material-icons text-green-600" style={{ fontSize: '14px' }}>eco</span>
+                                    </div>
+                                    <span className="text-xs text-green-700">Better choice</span>
+                                  </div>
+                                  
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="h-7 text-xs"
+                                    onClick={() => {
+                                      // When the user clicks to add the alternative, we'll replace the original
+                                      // with the alternative in their list and show a toast
+                                      if (justScanned) {
+                                        // Remove the original
+                                        setScannedItems(prevItems => 
+                                          prevItems.filter(item => item.id !== justScanned.id)
+                                        );
+                                        
+                                        // Add the alternative with the captured photo if available
+                                        const enhancedAlt = justScanned.capturedPhotoUrl ? {
+                                          ...alt,
+                                          capturedPhotoUrl: justScanned.capturedPhotoUrl,
+                                          showCapturedPhoto: true
+                                        } : alt;
+                                        
+                                        setScannedItems(prevItems => [...prevItems, enhancedAlt]);
+                                        
+                                        // Close the "just scanned" card
+                                        setJustScanned(null);
+                                        
+                                        // Show success toast
+                                        toast({
+                                          title: "Smart Swap Applied!",
+                                          description: `Added ${alt.name} instead of ${justScanned.name}, saving $${(justScanned.price - alt.price).toFixed(2)}`,
+                                          variant: "default",
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <span className="flex items-center">
+                                      <span className="material-icons text-xs mr-1">shopping_cart_checkout</span> Choose This
+                                    </span>
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -842,9 +904,26 @@ export default function GroceryScanner() {
                       <Card key={item.id} className="overflow-hidden">
                         <div className="p-4 border-b border-neutral-100 flex items-center justify-between">
                           <div className="flex items-center">
-                            <div className="bg-white p-1 rounded mr-3 border border-neutral-100">
-                              <img src={item.image} alt={item.name} className="w-12 h-12 object-contain" />
-                            </div>
+                            {/* Show captured photo if available */}
+                            {item.showCapturedPhoto && item.capturedPhotoUrl ? (
+                              <div className="rounded mr-3 border border-neutral-100 overflow-hidden relative" style={{ width: '60px', height: '60px' }}>
+                                <img 
+                                  src={item.capturedPhotoUrl} 
+                                  alt={`Photo of ${item.name}`} 
+                                  className="w-full h-full object-cover" 
+                                />
+                                
+                                {/* Small indicator for captured photo */}
+                                <div className="absolute bottom-0 right-0 bg-blue-500 text-white text-[8px] px-1">
+                                  Photo
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-white p-1 rounded mr-3 border border-neutral-100">
+                                <img src={item.image} alt={item.name} className="w-12 h-12 object-contain" />
+                              </div>
+                            )}
+                            
                             <div>
                               <h4 className="font-medium">{item.name}</h4>
                               <div className="flex items-center">
@@ -869,6 +948,14 @@ export default function GroceryScanner() {
                                   </div>
                                 )}
                               </div>
+                              
+                              {/* Add "Your photo" indicator if it's captured */}
+                              {item.showCapturedPhoto && item.capturedPhotoUrl && (
+                                <div className="text-xs text-neutral-500 mt-0.5 flex items-center">
+                                  <span className="material-icons text-[12px] mr-1">photo_camera</span>
+                                  Scanned {new Date().toLocaleDateString([], {month: 'short', day: 'numeric'})}
+                                </div>
+                              )}
                             </div>
                           </div>
                           
