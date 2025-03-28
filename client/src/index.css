@@ -171,6 +171,43 @@
     to { opacity: 1; transform: translateY(0); }
   }
   
+  /* Camera Flash Animation */
+  @keyframes camera-flash {
+    0% { opacity: 0; }
+    5% { opacity: 0.9; }
+    15% { opacity: 0; }
+    20% { opacity: 0.2; }
+    25% { opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  .animate-camera-flash {
+    animation: camera-flash 1s ease-out;
+  }
+
+  /* Typing cursor animation */
+  @keyframes typing-cursor {
+    0%, 100% { border-right-color: transparent; }
+    50% { border-right-color: currentColor; }
+  }
+
+  .animate-typing-cursor {
+    border-right: 2px solid;
+    padding-right: 2px;
+    animation: typing-cursor 1s step-end infinite;
+  }
+  
+  /* Slow pulse for target detection */
+  @keyframes pulse-slow {
+    0% { opacity: 0.2; }
+    50% { opacity: 0.6; }
+    100% { opacity: 0.2; }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+  
   /* Scanner Animations */
   @keyframes scanner {
     0% {
@@ -246,6 +283,17 @@
   @keyframes scanner-fadeIn {
     0% { opacity: 0; transform: translateY(-10px); }
     100% { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Object detection box animations */
+  @keyframes detection-box {
+    0% { transform: scale(1); border-color: rgba(74, 222, 128, 0.5); }
+    50% { transform: scale(1.05); border-color: rgba(74, 222, 128, 0.8); }
+    100% { transform: scale(1); border-color: rgba(74, 222, 128, 0.5); }
+  }
+
+  .animate-detection-box {
+    animation: detection-box 2s ease-in-out infinite;
   }
   
   .typing-indicator {

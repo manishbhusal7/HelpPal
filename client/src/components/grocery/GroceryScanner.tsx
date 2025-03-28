@@ -326,25 +326,51 @@ export default function GroceryScanner() {
   const simulateScan = () => {
     setIsScanning(true);
     
-    // Mock scanning process with more realistic timing
+    // First show flash/camera shutter effect
+    toast({
+      title: "Image Captured",
+      description: "Processing photo...",
+      duration: 1500,
+    });
+    
+    // Mock scanning process with more realistic three-step timing
     setTimeout(() => {
-      // Show a processing state for a more realistic experience with specific messaging
+      // Step 1: Show initial detection phase
       toast({
         title: "Product Detected",
-        description: "Analyzing product and comparing prices across stores...",
-        duration: 3000,
+        description: "Identifying product features...",
+        duration: 1500,
       });
       
-      // Add a second delay to simulate deeper processing
+      // Step 2: Show product recognition
       setTimeout(() => {
         // Randomly select an item from the database to "scan"
         const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
         const scannedItem = groceryDatabase[randomIndex];
         
-        handleItemFound(scannedItem);
-        setIsScanning(false);
-      }, 1200);
-    }, 2000);
+        toast({
+          title: `${scannedItem.name} Identified`,
+          description: "Comparing prices across 8 local stores...",
+          duration: 2000,
+        });
+        
+        // Step 3: Show price comparison results
+        setTimeout(() => {
+          // Add detailed toast with nutritional comparison or other details
+          if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
+            toast({
+              title: "Price Analysis Complete",
+              description: `Found ${scannedItem.alternatives.length} alternatives with potential savings up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
+              duration: 2500,
+            });
+          }
+          
+          // Finally add the item
+          handleItemFound(scannedItem);
+          setIsScanning(false);
+        }, 1500);
+      }, 1500);
+    }, 1000);
   };
 
   const selectAlternative = (original: any, alternative: any) => {
@@ -435,25 +461,61 @@ export default function GroceryScanner() {
                     ></video>
                     
                     {/* Scanner animation overlay */}
-                    {isScanning && <div className="animate-scanner" />}
+                    {isScanning && (
+                      <>
+                        <div className="animate-scanner" />
+                        {/* Camera flash animation */}
+                        <div className="absolute inset-0 bg-white opacity-0 animate-camera-flash" />
+                      </>
+                    )}
+                    
+                    {/* AI vision detection overlay */}
+                    <div className="absolute inset-0">
+                      <div className="border border-blue-400 w-10 h-10 absolute top-14 left-20 rounded-sm opacity-30" />
+                      <div className="border border-green-400 w-14 h-8 absolute bottom-24 right-16 rounded-sm opacity-30" />
+                      <div className="border border-yellow-400 w-20 h-16 absolute top-1/3 right-1/3 rounded-sm opacity-30" />
+                      
+                      {/* Product detection markers */}
+                      {!isScanning && (
+                        <div className="absolute top-1/4 left-1/3 transform -translate-x-1/2 -translate-y-1/2">
+                          <div className="h-16 w-16 border-2 border-green-500 rounded-sm opacity-40 animate-pulse-slow" />
+                          <div className="absolute -top-6 -left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                            <span className="flex items-center">
+                              <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                              Target detected
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     
                     <div className="absolute inset-0 flex items-center justify-center">
                       {isScanning ? (
                         <div className="flex flex-col items-center">
-                          <div className="animate-pulse-border flex items-center justify-center h-20 w-60 bg-primary bg-opacity-20 rounded-lg">
+                          <div className="animate-pulse-border flex items-center justify-center h-24 w-64 bg-primary bg-opacity-20 rounded-lg">
                             <div className="flex flex-col items-center">
-                              <span className="text-white font-medium animate-blink">Analyzing product...</span>
-                              <div className="mt-1 w-32 h-1 bg-white bg-opacity-20 rounded-full overflow-hidden">
+                              <div className="text-white font-medium mb-1">
+                                <span className="inline-block animate-typing-cursor">Processing image</span>
+                              </div>
+                              <div className="text-xs text-white mb-2">
+                                Detecting brand, price & nutritional info
+                              </div>
+                              <div className="w-40 h-1.5 bg-white bg-opacity-20 rounded-full overflow-hidden">
                                 <div className="h-full bg-white animate-progress-linear"></div>
                               </div>
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <div className="border-2 border-primary w-60 h-20 rounded-lg flex items-center justify-center">
-                          <span className="text-sm text-white bg-black bg-opacity-50 p-1 rounded">
-                            Position product in view
-                          </span>
+                        <div className="border-2 border-primary w-64 h-24 rounded-lg flex items-center justify-center">
+                          <div className="flex flex-col items-center">
+                            <span className="text-sm text-white bg-black bg-opacity-70 p-1 rounded mb-1">
+                              Position product label in frame
+                            </span>
+                            <span className="text-xs text-white bg-black bg-opacity-50 px-1 py-0.5 rounded">
+                              AI will identify best price alternatives
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
