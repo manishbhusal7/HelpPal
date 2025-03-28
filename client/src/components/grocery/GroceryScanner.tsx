@@ -456,24 +456,24 @@ export default function GroceryScanner() {
     // Reset scan progress
     setScanProgress(0);
     
-    // Start progress animation - with a more realistic, gradually accelerating effect
-    const totalScanTime = 18000; // Extend total scan animation time to 18 seconds
-    const progressUpdateInterval = 100; // Update progress every 100ms for smoother animation
+    // Start progress animation - with a realistic, gradually accelerating effect
+    const totalScanTime = 7000; // Total scan animation time of 7 seconds
+    const progressUpdateInterval = 50; // Update more frequently (50ms) for smoother animation
     
     // Create three phases for more natural scanning behavior:
-    // 1. Very slow initial startup (0-20% in first 8 seconds)
-    // 2. Medium speed middle phase (20-70% in next 8 seconds)
-    // 3. Slightly faster final phase (70-99% in final 2 seconds)
+    // 1. Very slow initial startup (0-30% in first 3 seconds)
+    // 2. Medium speed middle phase (30-80% in next 3 seconds)
+    // 3. Slightly faster final phase (80-99% in final 1 second)
     // We'll save the final 1% for the completion callback
     
-    const phase1Target = 20; // Progress slowly to 20%
-    const phase1Time = 8000; // Take 8 seconds for initial phase
+    const phase1Target = 30; // Progress slowly to 30%
+    const phase1Time = 3000; // Take 3 seconds for initial phase
     
-    const phase2Target = 70; // Progress to 70% by end of middle phase
-    const phase2Time = 8000; // 8 seconds for middle phase
+    const phase2Target = 80; // Progress to 80% by end of middle phase
+    const phase2Time = 3000; // 3 seconds for middle phase
     
     const phase3Target = 99; // Progress to 99% by end (save final 1% for completion)
-    const phase3Time = 2000; // 2 seconds for final phase
+    const phase3Time = 1000; // 1 second for final phase
     
     // Calculate increments for each phase
     const phase1Increment = phase1Target / (phase1Time / progressUpdateInterval);
