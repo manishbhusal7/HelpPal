@@ -542,13 +542,12 @@ export default function GroceryScanner() {
                   
                   // Final results after all analysis is complete
                   setTimeout(() => {
-                    if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
-                      toast({
-                        title: `${scannedItem.name} Identified!`,
-                        description: `Found ${scannedItem.alternatives.length} ways to save up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
-                        duration: 3500,
-                      });
-                    }
+                    // First only identify the main product with price
+                    toast({
+                      title: "Product Identified",
+                      description: `${scannedItem.name} - $${scannedItem.price.toFixed(2)} at ${scannedItem.store}`,
+                      duration: 4000,
+                    });
                     
                     // Save the product with the actual photo we captured
                     const enhancedScannedItem = {
@@ -561,6 +560,62 @@ export default function GroceryScanner() {
                     // Add to list and show as just scanned
                     setScannedItems([...scannedItems, enhancedScannedItem]);
                     setJustScanned(enhancedScannedItem);
+                    
+                    // After 2 seconds, show alternative product if available
+                    setTimeout(() => {
+                      if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
+                        const bestAlternative = scannedItem.alternatives[0];
+                        const savings = (scannedItem.price - bestAlternative.price).toFixed(2);
+                        
+                        toast({
+                          title: "Alternative Product Suggestion",
+                          description: (
+                            <div className="space-y-2">
+                              <div>{bestAlternative.name} - ${bestAlternative.price.toFixed(2)}</div>
+                              <div className="text-green-600 font-medium">Save ${savings}</div>
+                              <div className="flex justify-between items-center mt-1.5">
+                                <button 
+                                  onClick={() => {
+                                    // Replace the original with alternative
+                                    setScannedItems(items => items.map(item => 
+                                      item.id === scannedItem.id 
+                                        ? {...bestAlternative, capturedPhotoUrl: photoUrl, showCapturedPhoto: true}
+                                        : item
+                                    ));
+                                    
+                                    toast({
+                                      title: "Alternative Accepted",
+                                      description: `Replaced with ${bestAlternative.name}, saved $${savings}`,
+                                    });
+                                    
+                                    // Close the "just scanned" view
+                                    setJustScanned(null);
+                                  }}
+                                  className="flex items-center text-green-600 bg-green-50 px-3 py-1.5 rounded-md"
+                                >
+                                  <span className="material-icons text-sm mr-1">check</span>
+                                  Accept
+                                </button>
+                                
+                                <button 
+                                  onClick={() => {
+                                    toast({
+                                      title: "Alternative Declined",
+                                      description: `Keeping ${scannedItem.name}`,
+                                    });
+                                  }}
+                                  className="flex items-center text-red-600 bg-red-50 px-3 py-1.5 rounded-md"
+                                >
+                                  <span className="material-icons text-sm mr-1">close</span>
+                                  Decline
+                                </button>
+                              </div>
+                            </div>
+                          ),
+                          duration: 8000, // Long duration to give user time to decide
+                        });
+                      }
+                    }, 2000);
                     
                     // Reset scan states - but with a slight delay to avoid abrupt transition
                     setTimeout(() => {
