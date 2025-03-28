@@ -78,7 +78,7 @@ export class MemStorage implements IStorage {
 
   // Initialize demo data
   private initializeDemoData() {
-    // Create demo user
+    // Create demo user with lower credit score (target audience)
     const demoUser: User = {
       id: this.userId++,
       username: "alexthompson",
@@ -86,20 +86,20 @@ export class MemStorage implements IStorage {
       name: "Alex Thompson",
       email: "alex@example.com",
       avatarInitials: "AT",
-      creditScore: 736,
-      creditScoreStatus: "good",
+      creditScore: 650,
+      creditScoreStatus: "fair",
       createdAt: new Date()
     };
     this.users.set(demoUser.id, demoUser);
 
-    // Create demo credit cards
+    // Create demo credit cards with high utilization (typical for lower credit scores)
     const visaCard: CreditCard = {
       id: this.creditCardId++,
       userId: demoUser.id,
       name: "Visa Signature",
-      balance: 2500,
+      balance: 3800,
       limit: 5000,
-      utilization: 50,
+      utilization: 76, // High utilization contributing to lower score
       isConnected: true
     };
     this.creditCards.set(visaCard.id, visaCard);
@@ -108,9 +108,9 @@ export class MemStorage implements IStorage {
       id: this.creditCardId++,
       userId: demoUser.id,
       name: "Chase Freedom",
-      balance: 1800,
+      balance: 3200,
       limit: 4000,
-      utilization: 45,
+      utilization: 80, // High utilization contributing to lower score
       isConnected: true
     };
     this.creditCards.set(amexCard.id, amexCard);
@@ -143,30 +143,35 @@ export class MemStorage implements IStorage {
     };
     this.incomeData.set(nextIncome.id, nextIncome);
 
-    // Create notifications
+    // Create notifications tailored for user with poor credit health
     const notifications = [
       {
-        message: "Hi Alex, let's start improving your financial health!",
+        message: "Hi Alex, let's work together to improve your 650 credit score!",
         type: "info",
         createdAt: new Date(Date.now() - 15 * 60 * 1000) // 15 minutes ago
       },
       {
-        message: "You're using 50% of your credit - that's above the recommended usage",
+        message: "Your credit utilization is at 78% - high utilization is hurting your score",
         type: "warning",
         createdAt: new Date(Date.now() - 10 * 60 * 1000) // 10 minutes ago
       },
       {
-        message: "You saved $15 on groceries last week with smart swaps - great job!",
+        message: "Your credit score decreased by 8 points this month - let's take action",
+        type: "warning", 
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
+      },
+      {
+        message: "You saved $15 on groceries last week with smart swaps - apply this to debt!",
         type: "success",
         createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
       },
       {
-        message: "Your weekly spending report is ready to view",
+        message: "We've analyzed your spending - see the 3 areas you can cut back",
         type: "info",
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
       },
       {
-        message: "You've successfully connected all your bank accounts",
+        message: "You've successfully connected all your accounts - we found 4 areas to improve",
         type: "success",
         createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 1 week ago
       }
@@ -184,29 +189,41 @@ export class MemStorage implements IStorage {
       this.notifications.set(notification.id, notification);
     });
 
-    // Create action items
+    // Create action items focused on credit improvement
     const actionItems = [
       {
-        title: "Pay $300 to Your Visa Card",
-        description: "Paying $300 will lower your utilization to ~35% and could boost your score by ~20 points next month!",
+        title: "URGENT: Pay $750 to Your Visa Card",
+        description: "Your 76% utilization is damaging your score. Paying $750 could boost your score by ~30 points next month!",
         type: "warning",
         actionButton: "Schedule Payment"
       },
       {
-        title: "Scan Grocery Receipts",
-        description: "Use our grocery scanner to find cheaper alternatives and save on your next shopping trip.",
+        title: "Dispute Old Collections Account",
+        description: "We found a potentially outdated collections account from 2019 that might be removable.",
+        type: "warning",
+        actionButton: "Start Dispute"
+      },
+      {
+        title: "Scan Grocery Receipts to Save",
+        description: "Find cheaper alternatives - every $100 saved can be put toward reducing your high credit utilization.",
         type: "info",
         actionButton: "Open Scanner"
       },
       {
-        title: "Try 'What-If' Simulator",
-        description: "See how paying off $1000 over the next 3 months could improve your credit score.",
+        title: "Create Repayment Plan",
+        description: "See how paying off $1500 over the next 4 months could bring your credit score above 700.",
         type: "info",
         actionButton: "Try Simulator"
       },
       {
-        title: "Weekly Savings Goal",
-        description: "You've saved $15 so far this week. Try to reach your goal of $25 by finding more savings opportunities.",
+        title: "Set Up Automatic Payments",
+        description: "Late payments are affecting your score. Set up automatic payments to never miss a due date.",
+        type: "warning",
+        actionButton: "Set Up Now"
+      },
+      {
+        title: "Weekly Debt Reduction Goal",
+        description: "You've applied $15 to debt this week. Try to reach your goal of $50 by finding more savings.",
         type: "success",
         actionButton: "Find Savings"
       }
@@ -226,15 +243,15 @@ export class MemStorage implements IStorage {
       this.actionItems.set(actionItem.id, actionItem);
     });
 
-    // Create a default simulation
+    // Create a default simulation starting from the low score
     const simulation: Simulation = {
       id: this.simulationId++,
       userId: demoUser.id,
-      baseScore: 736,
-      potentialScore: 771,
-      payDownDebt: 1000,
+      baseScore: 650,
+      potentialScore: 703, // Achievable with debt reduction and on-time payments
+      payDownDebt: 2000, // More aggressive debt reduction needed for low score
       newCreditCard: false,
-      onTimePayments: 3,
+      onTimePayments: 6, // Need more consistent payments to show improvement
       createdAt: new Date()
     };
     this.simulations.set(simulation.id, simulation);

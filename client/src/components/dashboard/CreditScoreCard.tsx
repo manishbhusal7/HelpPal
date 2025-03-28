@@ -4,8 +4,23 @@ interface CreditScoreCardProps {
   userId: number | undefined;
 }
 
+interface User {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  avatarInitials: string;
+  creditScore: number;
+  creditScoreStatus: string;
+}
+
+interface ScoreHistoryPoint {
+  date: string;
+  score: number;
+}
+
 export default function CreditScoreCard({ userId }: CreditScoreCardProps) {
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading } = useQuery<User>({
     queryKey: [`/api/users/${userId}`],
     enabled: !!userId
   });
@@ -30,6 +45,14 @@ export default function CreditScoreCard({ userId }: CreditScoreCardProps) {
   }
 
   const { creditScore, creditScoreStatus } = user;
+  
+  // Credit score history showing a downward trend
+  const scoreHistory = [
+    { date: '3 months ago', score: 678 },
+    { date: '2 months ago', score: 665 },
+    { date: '1 month ago', score: 658 },
+    { date: 'Today', score: 650 }
+  ];
   
   // Calculate percentage for the circle
   const maxScore = 850;
@@ -74,7 +97,7 @@ export default function CreditScoreCard({ userId }: CreditScoreCardProps) {
               cy="50"
             />
             <circle 
-              className="text-secondary-500" 
+              className="text-accent-500" // Changed color to orange-ish to reflect caution/risk
               strokeWidth="10" 
               stroke="currentColor" 
               fill="transparent" 
@@ -90,6 +113,13 @@ export default function CreditScoreCard({ userId }: CreditScoreCardProps) {
             <span className="text-sm text-neutral-500">out of {maxScore}</span>
           </div>
         </div>
+        
+        {/* Trend Indicator */}
+        <div className="flex items-center text-danger-500 mb-3">
+          <span className="material-icons text-sm mr-1.5 -mt-0.5">trending_down</span>
+          <span className="text-xs font-medium">-28 points in 3 months</span>
+        </div>
+        
         <div className="w-full flex justify-between mb-1">
           <span className="text-xs text-neutral-500">Poor</span>
           <span className="text-xs text-neutral-500">Excellent</span>
@@ -99,6 +129,33 @@ export default function CreditScoreCard({ userId }: CreditScoreCardProps) {
             className="bg-gradient-to-r from-red-500 via-amber-500 to-green-500 h-full rounded" 
             style={{ width: `${scorePercentage}%` }}
           ></div>
+        </div>
+        
+        {/* Score History Mini Chart */}
+        <div className="w-full mt-4">
+          <div className="flex justify-between items-end h-10 px-1">
+            {scoreHistory.map((point, index) => (
+              <div key={index} className="flex flex-col items-center">
+                <div 
+                  className={`w-1.5 rounded-t ${index === scoreHistory.length - 1 ? 'bg-danger-500' : 'bg-accent-500'}`} 
+                  style={{ 
+                    height: `${Math.round(((point.score - 580) / (850 - 580)) * 100) * 0.35}px`,
+                    minHeight: '4px'
+                  }}
+                ></div>
+                <span className="text-xs text-neutral-400 mt-1">{point.date.includes('Today') ? 
+                  <span className="text-danger-500 font-medium">Today</span> : point.date}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Action Needed Alert */}
+        <div className="w-full mt-4 p-2 bg-red-50 rounded-md border border-red-100 flex items-start">
+          <span className="material-icons text-danger-500 mr-2 text-sm mt-0.5">priority_high</span>
+          <div className="flex-1">
+            <p className="text-xs text-danger-800">Your credit score is trending downward. Take action to improve your score by reducing your credit utilization.</p>
+          </div>
         </div>
       </div>
     </div>
