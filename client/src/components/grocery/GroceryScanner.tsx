@@ -261,8 +261,8 @@ export default function GroceryScanner() {
       setJustScanned(foundItem);
       
       toast({
-        title: "Item Scanned Successfully",
-        description: `${foundItem.name} ($${foundItem.price.toFixed(2)}) has been added to your list.`,
+        title: `Product Identified: ${foundItem.name}`,
+        description: `Price: $${foundItem.price.toFixed(2)} at ${foundItem.store}. Added to your shopping list.`,
         duration: 5000, // Longer duration for visibility
       });
       
@@ -272,9 +272,11 @@ export default function GroceryScanner() {
       // Display recommendations in a toast as well
       if (foundItem.alternatives && foundItem.alternatives.length > 0) {
         setTimeout(() => {
+          const alt = foundItem.alternatives[0];
+          const saving = (foundItem.price - alt.price).toFixed(2);
           toast({
-            title: "Savings Opportunity Found!",
-            description: foundItem.alternatives[0].recommendation,
+            title: `Save $${saving} on ${foundItem.name}!`,
+            description: `${alt.recommendation} ${alt.coupon ? `Also: ${alt.coupon}` : ''}`,
             variant: "default",
             duration: 8000, // Make these stay visible longer
           });
@@ -326,10 +328,11 @@ export default function GroceryScanner() {
     
     // Mock scanning process with more realistic timing
     setTimeout(() => {
-      // Show a processing state for a more realistic experience
+      // Show a processing state for a more realistic experience with specific messaging
       toast({
         title: "Product Detected",
-        description: "Analyzing pricing information...",
+        description: "Analyzing product and comparing prices across stores...",
+        duration: 3000,
       });
       
       // Add a second delay to simulate deeper processing
@@ -438,7 +441,12 @@ export default function GroceryScanner() {
                       {isScanning ? (
                         <div className="flex flex-col items-center">
                           <div className="animate-pulse-border flex items-center justify-center h-20 w-60 bg-primary bg-opacity-20 rounded-lg">
-                            <span className="text-white font-medium animate-blink">Scanning for product...</span>
+                            <div className="flex flex-col items-center">
+                              <span className="text-white font-medium animate-blink">Analyzing product...</span>
+                              <div className="mt-1 w-32 h-1 bg-white bg-opacity-20 rounded-full overflow-hidden">
+                                <div className="h-full bg-white animate-progress-linear"></div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ) : (
@@ -513,21 +521,29 @@ export default function GroceryScanner() {
               {justScanned && (
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 animate-pulse-border">
                   <div className="flex items-start">
-                    <div className="bg-white p-2 rounded-md mr-3">
+                    <div className="bg-white p-2 rounded-md mr-3 border border-blue-200">
                       <img src={justScanned.image} alt={justScanned.name} className="w-12 h-12 object-contain" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-blue-900">{justScanned.name}</h4>
+                      <div className="flex items-center">
+                        <h4 className="font-medium text-blue-900">{justScanned.name}</h4>
+                        <Badge className="ml-2 bg-blue-200 text-blue-800 hover:bg-blue-200" variant="outline">
+                          Detected
+                        </Badge>
+                      </div>
                       <div className="text-sm text-blue-700 font-medium">
                         ${justScanned.price.toFixed(2)} at {justScanned.store}
                       </div>
                       
                       {justScanned.alternatives && justScanned.alternatives.length > 0 && (
-                        <div className="flex items-center mt-2 animate-blink-slow">
-                          <span className="material-icons text-sm text-amber-500 mr-1">tips_and_updates</span>
-                          <span className="text-sm text-amber-700">
+                        <div className="mt-2 p-2 bg-amber-50 border border-amber-100 rounded-md">
+                          <div className="flex items-center mb-1">
+                            <span className="material-icons text-sm text-amber-500 mr-1">tips_and_updates</span>
+                            <span className="text-xs font-medium text-amber-800">SAVINGS OPPORTUNITY</span>
+                          </div>
+                          <p className="text-sm text-amber-700 animate-blink-slow">
                             {justScanned.alternatives[0].recommendation}
-                          </span>
+                          </p>
                         </div>
                       )}
                     </div>
@@ -908,16 +924,6 @@ export default function GroceryScanner() {
         </TabsContent>
       </Tabs>
       
-      <style jsx>{`
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-          0% { opacity: 0; transform: translateY(-10px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }

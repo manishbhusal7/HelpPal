@@ -226,6 +226,28 @@
     animation: blink 3s ease-in-out infinite;
   }
   
+  /* Linear progress bar animation */
+  @keyframes progress-linear {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    80% { width: 90%; }
+    100% { width: 100%; }
+  }
+  
+  .animate-progress-linear {
+    animation: progress-linear 3s forwards;
+  }
+  
+  /* FadeIn animation for scanner elements */
+  .animate-fadeIn {
+    animation: scanner-fadeIn 0.5s ease-in-out;
+  }
+  
+  @keyframes scanner-fadeIn {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  
   .typing-indicator {
     display: inline-flex;
     align-items: center;
