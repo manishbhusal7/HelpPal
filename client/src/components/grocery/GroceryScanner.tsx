@@ -404,90 +404,77 @@ export default function GroceryScanner() {
   const simulateScan = () => {
     setIsScanning(true);
     
-    // Actually capture a photo from the camera stream
-    const photoUrl = capturePhoto();
-    
-    if (photoUrl) {
-      // Store the captured photo URL
-      setCapturedPhotoUrl(photoUrl);
+    // Flash animation effect first (camera shutter)
+    // The photo will be "taken" after the flash
+    setTimeout(() => {
+      // Actually capture photo from camera stream
+      const photoUrl = capturePhoto();
       
-      // First show flash/camera shutter effect
-      toast({
-        title: "Image Captured",
-        description: "Photo taken successfully. Processing...",
-        duration: 1500,
-      });
-      
-      // Set a state to show the captured image is frozen in the UI
-      setCapturedPhoto(true);
-      
-      // Create a separate phase-based scanning process
-      // Phase 1: Freeze frame for 4 seconds (the camera capture phase)
-      setTimeout(() => {
-        // Phase 2: Initial product detection (2 seconds)
+      if (photoUrl) {
+        // Store the captured photo URL
+        setCapturedPhotoUrl(photoUrl);
+        
+        // Quick feedback toast
         toast({
-          title: "Processing Image",
-          description: "Analyzing product features and dimensions...",
-          duration: 2000,
+          title: "Photo Captured",
+          description: "Processing image...",
+          duration: 1500,
         });
         
+        // Freeze the image by showing it as a still
+        setCapturedPhoto(true);
+        
+        // Keep the frozen image visible for 2 seconds
+        // This makes it feel realistic - like the camera took a photo and is analyzing it
         setTimeout(() => {
-          // Phase 3: Brand and product identification (2 seconds)
-          // Randomly select an item from the database to "scan"
-          const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
-          const scannedItem = groceryDatabase[randomIndex];
-          
+          // After the freeze period, start the quick AI analysis animations
           toast({
-            title: `${scannedItem.name} Identified`,
-            description: "Reading nutrition facts and price information...",
+            title: "Analyzing Product",
+            description: "Identifying brand and features...",
             duration: 2000,
           });
           
+          // Then pick a random product from our database to "find"
+          const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
+          const scannedItem = groceryDatabase[randomIndex];
+          
+          // After a short delay show the results - total process takes about 5-6 seconds
+          // which feels more realistic for a computer vision task
           setTimeout(() => {
-            // Phase 4: Price comparison (2.5 seconds)
-            toast({
-              title: "Checking Competitor Prices",
-              description: "Scanning 8 nearby stores for better deals...",
-              duration: 2500,
-            });
+            if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
+              toast({
+                title: `${scannedItem.name} Identified!`,
+                description: `Found ${scannedItem.alternatives.length} ways to save up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
+                duration: 3000,
+              });
+            }
             
-            setTimeout(() => {
-              // Phase 5: Results and recommendations
-              if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
-                toast({
-                  title: "Savings Opportunity Found",
-                  description: `Found ${scannedItem.alternatives.length} alternatives with savings up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
-                  duration: 3000,
-                });
-              }
-              
-              // Set the captured photo as the justScanned image (to display the actual photo taken)
-              const enhancedScannedItem = {
-                ...scannedItem,
-                capturedPhotoUrl: photoUrl, // Store the actual photo that was taken
-                showCapturedPhoto: true // Flag to indicate we should show the real photo
-              };
-              
-              // Finally add the item and set justScanned to our enhanced item
-              setScannedItems([...scannedItems, enhancedScannedItem]);
-              setJustScanned(enhancedScannedItem);
-              
-              // Reset scanning states but not the photo URL so we can display it
-              setIsScanning(false);
-              setCapturedPhoto(false);
-            }, 2500);
-          }, 2000);
-        }, 2000);
-      }, 4000); // First keep the capture frozen for 4 seconds
-    } else {
-      // If photo capture failed
-      toast({
-        title: "Capture Failed",
-        description: "Unable to capture photo. Please try again.",
-        variant: "destructive",
-      });
-      setIsScanning(false);
-    }
+            // Save the actual photo we took with the product
+            const enhancedScannedItem = {
+              ...scannedItem,
+              capturedPhotoUrl: photoUrl, // Store the actual photo that was taken
+              showCapturedPhoto: true // Flag to indicate we should show the real photo
+            };
+            
+            // Add to list and show as just scanned
+            setScannedItems([...scannedItems, enhancedScannedItem]);
+            setJustScanned(enhancedScannedItem);
+            
+            // Reset scan states
+            setIsScanning(false);
+            setCapturedPhoto(false);
+          }, 3000);
+        }, 2000); // 2 second freeze frame for realism
+      } else {
+        // If photo capture failed
+        toast({
+          title: "Capture Failed",
+          description: "Unable to take photo. Please try again.",
+          variant: "destructive",
+        });
+        setIsScanning(false);
+      }
+    }, 200); // Small delay for flash effect before capture
   };
 
   const selectAlternative = (original: any, alternative: any) => {
@@ -577,11 +564,10 @@ export default function GroceryScanner() {
                       className="w-full h-full object-cover"
                     ></video>
                     
-                    {/* Canvas for capturing photos - temporarily not hidden for debugging */}
+                    {/* Canvas for capturing photos - hidden */}
                     <canvas 
                       ref={canvasRef} 
-                      className="absolute top-0 left-0 z-10"
-                      style={{ width: '160px', height: '120px', border: '1px solid red', opacity: 0.6 }}
+                      className="hidden absolute"
                     ></canvas>
                     
                     {/* Scanner animation overlay */}
@@ -787,39 +773,59 @@ export default function GroceryScanner() {
                   <div className="flex flex-col">
                     <div className="flex items-start space-x-3">
                       {/* Show the captured photo prominently if available */}
-                      <div className="relative min-w-[140px]">
+                      <div className="relative min-w-[160px]">
                         {justScanned.showCapturedPhoto && justScanned.capturedPhotoUrl ? (
-                          <div className="relative">
-                            {/* Larger photo display with detection overlay */}
-                            <div className="rounded-md border-2 border-blue-300 overflow-hidden shadow-md" style={{ width: '140px', height: '105px' }}>
-                              <img 
-                                src={justScanned.capturedPhotoUrl} 
-                                alt={`Photo of ${justScanned.name}`} 
-                                className="w-full h-full object-cover" 
-                              />
+                          <div className="relative rounded-md overflow-hidden shadow-lg" style={{ width: '160px', height: '120px' }}>
+                            {/* The actual captured photo */}
+                            <img 
+                              src={justScanned.capturedPhotoUrl} 
+                              alt={`Photo of ${justScanned.name}`} 
+                              className="w-full h-full object-cover" 
+                            />
+                            
+                            {/* Product detection overlay with AI detection elements */}
+                            <div className="absolute inset-0">
+                              {/* Main product detection box */}
+                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div className="h-20 w-20 border-2 border-blue-500 rounded-sm">
+                                  {/* Corner markers for box */}
+                                  <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-blue-500"></div>
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-blue-500"></div>
+                                  <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-blue-500"></div>
+                                  <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-blue-500"></div>
+                                </div>
+                              </div>
                               
-                              {/* Product detection box overlay */}
-                              <div className="absolute inset-0 pointer-events-none">
-                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                                                h-16 w-16 border-2 border-blue-500 rounded-sm" />
+                              {/* Nutritional info label detection */}
+                              <div className="absolute bottom-8 right-6 h-12 w-20 border border-yellow-400 rounded-sm">
+                              </div>
+                              
+                              {/* Barcode detection area */}
+                              <div className="absolute top-6 left-8 h-8 w-12 border border-green-400 rounded-sm">
                               </div>
                             </div>
                             
                             {/* "Your photo" badge */}
-                            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-tr-md rounded-bl-md shadow-sm">
-                              Your Photo
+                            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-md shadow-sm">
+                              <span className="flex items-center">
+                                <span className="material-icons text-xs mr-1">check_circle</span>
+                                Captured
+                              </span>
                             </div>
                             
-                            {/* Timestamp badge */}
-                            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-0.5">
-                              <div className="flex items-center">
-                                <span className="material-icons text-xs mr-1.5 text-white opacity-70">photo_camera</span>
+                            {/* Timestamp overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 flex justify-between items-center">
+                              <span className="flex items-center">
+                                <span className="material-icons text-xs mr-1">photo_camera</span>
                                 {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                              </div>
+                              </span>
+                              <span className="flex items-center">
+                                <span className="text-blue-300">97%</span>
+                              </span>
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-white p-2 rounded-md border border-blue-200 shadow-sm" style={{ width: '140px', height: '105px' }}>
+                          <div className="bg-white p-2 rounded-md border border-blue-200 shadow-sm" style={{ width: '160px', height: '120px' }}>
                             <div className="flex justify-center items-center h-full">
                               <img src={justScanned.image} alt={justScanned.name} className="max-h-full max-w-full object-contain" />
                             </div>
