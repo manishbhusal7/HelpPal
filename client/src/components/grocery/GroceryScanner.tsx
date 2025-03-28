@@ -277,6 +277,7 @@ export default function GroceryScanner() {
   const [capturedPhoto, setCapturedPhoto] = useState(false);
   const [capturedPhotoUrl, setCapturedPhotoUrl] = useState<string | null>(null);
   const [currentAIState, setCurrentAIState] = useState<'stage1' | 'stage2' | 'stage3' | 'stage4'>('stage1');
+  const [scanProgress, setScanProgress] = useState(0);
   
   const cameraRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -452,6 +453,21 @@ export default function GroceryScanner() {
     setIsScanning(true);
     // Reset to first AI stage
     setCurrentAIState('stage1');
+    // Reset scan progress
+    setScanProgress(0);
+    
+    // Start progress animation
+    const totalScanTime = 20000; // Total scan time in milliseconds
+    const progressUpdateInterval = 200; // Update progress every 200ms
+    const progressIncrement = 100 / (totalScanTime / progressUpdateInterval);
+    
+    // Progress animation interval
+    const progressInterval = setInterval(() => {
+      setScanProgress(prev => {
+        const newProgress = Math.min(prev + progressIncrement, 99); // Cap at 99% until completion
+        return newProgress;
+      });
+    }, progressUpdateInterval);
     
     // Flash animation effect first (camera shutter)
     // The photo will be "taken" after the flash
@@ -542,6 +558,11 @@ export default function GroceryScanner() {
                   
                   // Final results after all analysis is complete
                   setTimeout(() => {
+                    // Complete the progress bar to 100%
+                    setScanProgress(100);
+                    // Clear the progress interval
+                    clearInterval(progressInterval);
+                    
                     // First only identify the main product with price
                     toast({
                       title: "Product Identified",
@@ -621,6 +642,8 @@ export default function GroceryScanner() {
                     setTimeout(() => {
                       setIsScanning(false);
                       setCapturedPhoto(false);
+                      // Reset scan progress for next time
+                      setScanProgress(0);
                     }, 500);
                   }, 3500);
                 }, 1000);
@@ -635,6 +658,10 @@ export default function GroceryScanner() {
           description: "Unable to take photo. Please try again.",
           variant: "destructive",
         });
+        // Clear the progress interval
+        clearInterval(progressInterval);
+        // Reset scan progress
+        setScanProgress(0);
         setIsScanning(false);
       }
     }, 200); // Small delay for flash effect before capture
@@ -739,6 +766,15 @@ export default function GroceryScanner() {
                         <div className="animate-scanner" />
                         {/* Camera flash animation - enhanced with stronger flash effect */}
                         <div className="absolute inset-0 bg-white opacity-0 animate-camera-flash z-50" />
+                        
+                        {/* Scanning progress bar */}
+                        <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-gradient-to-t from-black/70 to-transparent">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium text-white">AI Analysis</span>
+                            <span className="text-xs font-medium text-white">{scanProgress}%</span>
+                          </div>
+                          <Progress value={scanProgress} className="h-2" />
+                        </div>
                         
                         {/* Photo captured freeze frame overlay */}
                         {capturedPhoto && (
