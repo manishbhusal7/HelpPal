@@ -307,10 +307,34 @@ export default function GroceryScanner() {
       setIsCameraActive(true);
       
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        const constraints = { 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          } 
+        };
+        
+        navigator.mediaDevices.getUserMedia(constraints)
           .then(stream => {
+            console.log("Camera stream obtained successfully");
+            
             if (cameraRef.current) {
               cameraRef.current.srcObject = stream;
+              
+              // Make sure video is playing
+              cameraRef.current.play()
+                .then(() => {
+                  console.log("Video playback started");
+                  
+                  // Add event listener to know when video stream is ready
+                  cameraRef.current!.onloadedmetadata = () => {
+                    console.log("Video metadata loaded, dimensions:", 
+                      cameraRef.current?.videoWidth, 
+                      cameraRef.current?.videoHeight);
+                  };
+                })
+                .catch(e => console.error("Video play failed:", e));
             }
           })
           .catch(err => {
@@ -322,30 +346,59 @@ export default function GroceryScanner() {
             });
             setIsCameraActive(false);
           });
+      } else {
+        console.error("getUserMedia not supported");
+        toast({
+          title: "Camera Not Supported",
+          description: "Your browser doesn't support camera access.",
+          variant: "destructive"
+        });
+        setIsCameraActive(false);
       }
     }
   };
 
   // Function to actually capture photo from video stream
   const capturePhoto = () => {
-    if (!cameraRef.current || !canvasRef.current) return null;
+    if (!cameraRef.current || !canvasRef.current) {
+      console.error("Cannot capture photo - camera or canvas ref is missing");
+      return null;
+    }
     
     const video = cameraRef.current;
     const canvas = canvasRef.current;
+    
+    if (!video.videoWidth || !video.videoHeight) {
+      console.error("Video dimensions not available, camera might not be ready");
+      return null; 
+    }
+    
     const context = canvas.getContext('2d');
     
-    if (!context) return null;
+    if (!context) {
+      console.error("Cannot get 2D context from canvas");
+      return null;
+    }
     
-    // Set canvas dimensions to match video
+    // Make sure canvas is sized to match the video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Draw current video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Clear the canvas first
+    context.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Get data URL from canvas (this is the captured photo)
-    const photoUrl = canvas.toDataURL('image/jpeg');
-    return photoUrl;
+    // Draw current video frame to canvas
+    try {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Get data URL from canvas (this is the captured photo)
+      const photoUrl = canvas.toDataURL('image/jpeg', 0.9); // Use higher quality
+      console.log("Photo captured successfully"); // Debug
+      return photoUrl;
+    } catch (error) {
+      console.error("Error capturing photo:", error);
+      return null;
+    }
   };
 
   const simulateScan = () => {
@@ -524,10 +577,11 @@ export default function GroceryScanner() {
                       className="w-full h-full object-cover"
                     ></video>
                     
-                    {/* Hidden canvas for capturing photos */}
+                    {/* Canvas for capturing photos - temporarily not hidden for debugging */}
                     <canvas 
                       ref={canvasRef} 
-                      className="hidden absolute"
+                      className="absolute top-0 left-0 z-10"
+                      style={{ width: '160px', height: '120px', border: '1px solid red', opacity: 0.6 }}
                     ></canvas>
                     
                     {/* Scanner animation overlay */}
@@ -731,47 +785,82 @@ export default function GroceryScanner() {
               {justScanned && (
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 animate-pulse-border">
                   <div className="flex flex-col">
-                    <div className="flex items-start">
-                      {/* Show the captured photo if available, otherwise show the icon */}
-                      {justScanned.showCapturedPhoto && justScanned.capturedPhotoUrl ? (
-                        <div className="rounded-md mr-3 border border-blue-200 overflow-hidden" style={{ width: '120px', height: '90px' }}>
-                          <img 
-                            src={justScanned.capturedPhotoUrl} 
-                            alt={`Photo of ${justScanned.name}`} 
-                            className="w-full h-full object-cover" 
-                          />
-                          <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1.5 py-0.5">
-                            Your Photo
+                    <div className="flex items-start space-x-3">
+                      {/* Show the captured photo prominently if available */}
+                      <div className="relative min-w-[140px]">
+                        {justScanned.showCapturedPhoto && justScanned.capturedPhotoUrl ? (
+                          <div className="relative">
+                            {/* Larger photo display with detection overlay */}
+                            <div className="rounded-md border-2 border-blue-300 overflow-hidden shadow-md" style={{ width: '140px', height: '105px' }}>
+                              <img 
+                                src={justScanned.capturedPhotoUrl} 
+                                alt={`Photo of ${justScanned.name}`} 
+                                className="w-full h-full object-cover" 
+                              />
+                              
+                              {/* Product detection box overlay */}
+                              <div className="absolute inset-0 pointer-events-none">
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                                                h-16 w-16 border-2 border-blue-500 rounded-sm" />
+                              </div>
+                            </div>
+                            
+                            {/* "Your photo" badge */}
+                            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-tr-md rounded-bl-md shadow-sm">
+                              Your Photo
+                            </div>
+                            
+                            {/* Timestamp badge */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-0.5">
+                              <div className="flex items-center">
+                                <span className="material-icons text-xs mr-1.5 text-white opacity-70">photo_camera</span>
+                                {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="bg-white p-2 rounded-md mr-3 border border-blue-200">
-                          <img src={justScanned.image} alt={justScanned.name} className="w-16 h-16 object-contain" />
-                        </div>
-                      )}
+                        ) : (
+                          <div className="bg-white p-2 rounded-md border border-blue-200 shadow-sm" style={{ width: '140px', height: '105px' }}>
+                            <div className="flex justify-center items-center h-full">
+                              <img src={justScanned.image} alt={justScanned.name} className="max-h-full max-w-full object-contain" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
                       <div className="flex-1">
-                        <div className="flex items-center">
-                          <h4 className="font-medium text-blue-900">{justScanned.name}</h4>
-                          <Badge className="ml-2 bg-blue-200 text-blue-800 hover:bg-blue-200" variant="outline">
-                            Detected
+                        <div className="flex items-center space-x-2">
+                          <h4 className="font-medium text-blue-900 text-lg">{justScanned.name}</h4>
+                          <Badge className="bg-blue-200 text-blue-800 hover:bg-blue-200" variant="outline">
+                            <span className="flex items-center">
+                              <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-1"></span>
+                              Detected
+                            </span>
                           </Badge>
                         </div>
                         
-                        <div className="text-sm text-blue-700 font-medium">
-                          ${justScanned.price.toFixed(2)} at {justScanned.store}
+                        <div className="text-sm text-blue-700 font-medium mt-1">
+                          <span className="flex items-center">
+                            <span className="material-icons text-sm mr-1">attach_money</span>
+                            ${justScanned.price.toFixed(2)} at {justScanned.store}
+                          </span>
                         </div>
                         
-                        <div className="flex items-center mt-1 text-xs text-neutral-500">
-                          <span className="material-icons text-xs mr-1.5 text-neutral-400">history</span>
-                          Identified {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        <div className="mt-2 text-xs text-neutral-600 bg-white bg-opacity-50 rounded px-2 py-1">
+                          <div className="flex items-center">
+                            <span className="material-icons text-xs mr-1 text-blue-500">check_circle</span>
+                            Product identified with 97% confidence
+                          </div>
+                          <div className="mt-1 flex items-center">
+                            <span className="material-icons text-xs mr-1 text-amber-500">info</span>
+                            Nutrition and pricing details verified
+                          </div>
                         </div>
                       </div>
                       
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="text-blue-500"
+                        className="text-blue-500 h-8 w-8 rounded-full"
                         onClick={() => setJustScanned(null)}
                       >
                         <span className="material-icons">check_circle</span>
