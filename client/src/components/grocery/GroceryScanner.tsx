@@ -229,8 +229,10 @@ export default function GroceryScanner() {
   const [justScanned, setJustScanned] = useState<any>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(false);
+  const [capturedPhotoUrl, setCapturedPhotoUrl] = useState<string | null>(null);
   
   const cameraRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
   const handleSearch = () => {
@@ -324,67 +326,106 @@ export default function GroceryScanner() {
     }
   };
 
+  // Function to actually capture photo from video stream
+  const capturePhoto = () => {
+    if (!cameraRef.current || !canvasRef.current) return null;
+    
+    const video = cameraRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (!context) return null;
+    
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw current video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Get data URL from canvas (this is the captured photo)
+    const photoUrl = canvas.toDataURL('image/jpeg');
+    return photoUrl;
+  };
+
   const simulateScan = () => {
     setIsScanning(true);
     
-    // First show flash/camera shutter effect
-    toast({
-      title: "Image Captured",
-      description: "Photo taken successfully",
-      duration: 1500,
-    });
+    // Actually capture a photo from the camera stream
+    const photoUrl = capturePhoto();
     
-    // Set a state to show the captured image is frozen in the UI
-    setCapturedPhoto(true);
-    
-    // Create a separate phase-based scanning process
-    // Phase 1: Freeze frame for 4 seconds (the camera capture phase)
-    setTimeout(() => {
-      // Phase 2: Initial product detection (2 seconds)
+    if (photoUrl) {
+      // Store the captured photo URL
+      setCapturedPhotoUrl(photoUrl);
+      
+      // First show flash/camera shutter effect
       toast({
-        title: "Processing Image",
-        description: "Analyzing product features and dimensions...",
-        duration: 2000,
+        title: "Image Captured",
+        description: "Photo taken successfully",
+        duration: 1500,
       });
       
+      // Set a state to show the captured image is frozen in the UI
+      setCapturedPhoto(true);
+      
+      // Create a separate phase-based scanning process
+      // Phase 1: Freeze frame for 4 seconds (the camera capture phase)
       setTimeout(() => {
-        // Phase 3: Brand and product identification (2 seconds)
-        // Randomly select an item from the database to "scan"
-        const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
-        const scannedItem = groceryDatabase[randomIndex];
-        
+        // Phase 2: Initial product detection (2 seconds)
         toast({
-          title: `${scannedItem.name} Identified`,
-          description: "Reading nutrition facts and price information...",
+          title: "Processing Image",
+          description: "Analyzing product features and dimensions...",
           duration: 2000,
         });
         
         setTimeout(() => {
-          // Phase 4: Price comparison (2.5 seconds)
+          // Phase 3: Brand and product identification (2 seconds)
+          // Randomly select an item from the database to "scan"
+          const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
+          const scannedItem = groceryDatabase[randomIndex];
+          
           toast({
-            title: "Checking Competitor Prices",
-            description: "Scanning 8 nearby stores for better deals...",
-            duration: 2500,
+            title: `${scannedItem.name} Identified`,
+            description: "Reading nutrition facts and price information...",
+            duration: 2000,
           });
           
           setTimeout(() => {
-            // Phase 5: Results and recommendations
-            if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
-              toast({
-                title: "Savings Opportunity Found",
-                description: `Found ${scannedItem.alternatives.length} alternatives with savings up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
-                duration: 3000,
-              });
-            }
+            // Phase 4: Price comparison (2.5 seconds)
+            toast({
+              title: "Checking Competitor Prices",
+              description: "Scanning 8 nearby stores for better deals...",
+              duration: 2500,
+            });
             
-            // Finally add the item and clear states
-            handleItemFound(scannedItem);
-            setIsScanning(false);
-            setCapturedPhoto(false);
-          }, 2500);
+            setTimeout(() => {
+              // Phase 5: Results and recommendations
+              if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
+                toast({
+                  title: "Savings Opportunity Found",
+                  description: `Found ${scannedItem.alternatives.length} alternatives with savings up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
+                  duration: 3000,
+                });
+              }
+              
+              // Finally add the item and clear states
+              handleItemFound(scannedItem);
+              setIsScanning(false);
+              setCapturedPhoto(false);
+              setCapturedPhotoUrl(null);
+            }, 2500);
+          }, 2000);
         }, 2000);
-      }, 2000);
-    }, 4000); // First keep the capture frozen for 4 seconds
+      }, 4000); // First keep the capture frozen for 4 seconds
+    } else {
+      // If photo capture failed
+      toast({
+        title: "Capture Failed",
+        description: "Unable to capture photo. Please try again.",
+        variant: "destructive",
+      });
+      setIsScanning(false);
+    }
   };
 
   const selectAlternative = (original: any, alternative: any) => {
@@ -474,6 +515,12 @@ export default function GroceryScanner() {
                       className="w-full h-full object-cover"
                     ></video>
                     
+                    {/* Hidden canvas for capturing photos */}
+                    <canvas 
+                      ref={canvasRef} 
+                      className="hidden absolute"
+                    ></canvas>
+                    
                     {/* Scanner animation overlay */}
                     {isScanning && (
                       <>
@@ -483,29 +530,80 @@ export default function GroceryScanner() {
                         
                         {/* Photo captured freeze frame overlay */}
                         {capturedPhoto && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-between p-4">
-                            <div className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg">
-                              <div className="flex items-center">
-                                <span className="material-icons text-red-500 mr-2 animate-pulse">lens</span>
-                                <span className="font-medium">Photo Captured</span>
+                          <>
+                            {/* Show the actual captured photo instead of the live video feed */}
+                            {capturedPhotoUrl && (
+                              <div className="absolute inset-0">
+                                <img 
+                                  src={capturedPhotoUrl} 
+                                  alt="Captured product" 
+                                  className="w-full h-full object-cover"
+                                />
+                                
+                                {/* Add AI detection boxes over the frozen image */}
+                                <div className="absolute inset-0">
+                                  {/* Main product detection box */}
+                                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                    <div className="h-32 w-32 border-2 border-blue-500 rounded-sm animate-pulse-slow">
+                                      {/* Corner markers */}
+                                      <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-blue-500"></div>
+                                      <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-blue-500"></div>
+                                      <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-blue-500"></div>
+                                      <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-blue-500"></div>
+                                    </div>
+                                    <div className="absolute -top-8 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                      <span className="flex items-center whitespace-nowrap">
+                                        <span className="w-2 h-2 bg-white rounded-full mr-1 animate-pulse"></span>
+                                        Analyzing product...
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Nutritional info detection */}
+                                  <div className="absolute bottom-1/4 right-1/4 h-16 w-24 border border-yellow-400 rounded-sm">
+                                    <div className="absolute -top-6 left-0 bg-yellow-500 bg-opacity-80 text-white text-xs px-2 py-0.5 rounded">
+                                      <span className="flex items-center whitespace-nowrap">
+                                        Nutrition Facts
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Barcode detection */}
+                                  <div className="absolute top-2/3 left-1/4 h-10 w-16 border border-green-400 rounded-sm">
+                                    <div className="absolute -top-6 left-0 bg-green-500 bg-opacity-80 text-white text-xs px-2 py-0.5 rounded">
+                                      <span className="flex items-center whitespace-nowrap">
+                                        UPC Code
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
+                            )}
                             
-                            <div className="flex mt-auto w-full justify-between">
-                              <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded text-xs">
-                                <span className="flex items-center">
-                                  <span className="material-icons text-xs mr-1">aspect_ratio</span>
-                                  Product detected
-                                </span>
+                            <div className="absolute inset-0 flex flex-col items-center justify-between p-4">
+                              <div className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg">
+                                <div className="flex items-center">
+                                  <span className="material-icons text-red-500 mr-2 animate-pulse">lens</span>
+                                  <span className="font-medium">Photo Captured</span>
+                                </div>
                               </div>
-                              <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded text-xs">
-                                <span className="flex items-center">
-                                  <span className="material-icons text-xs mr-1">lightbulb</span>
-                                  Identifying product...
-                                </span>
+                              
+                              <div className="flex mt-auto w-full justify-between">
+                                <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded text-xs">
+                                  <span className="flex items-center">
+                                    <span className="material-icons text-xs mr-1">aspect_ratio</span>
+                                    Product detected
+                                  </span>
+                                </div>
+                                <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded text-xs">
+                                  <span className="flex items-center">
+                                    <span className="material-icons text-xs mr-1">lightbulb</span>
+                                    Identifying product...
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          </>
                         )}
                       </>
                     )}
