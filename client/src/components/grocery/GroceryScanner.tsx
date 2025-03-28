@@ -230,6 +230,7 @@ export default function GroceryScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(false);
   const [capturedPhotoUrl, setCapturedPhotoUrl] = useState<string | null>(null);
+  const [currentAIState, setCurrentAIState] = useState<'stage1' | 'stage2' | 'stage3' | 'stage4'>('stage1');
   
   const cameraRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -403,6 +404,8 @@ export default function GroceryScanner() {
 
   const simulateScan = () => {
     setIsScanning(true);
+    // Reset to first AI stage
+    setCurrentAIState('stage1');
     
     // Flash animation effect first (camera shutter)
     // The photo will be "taken" after the flash
@@ -417,28 +420,32 @@ export default function GroceryScanner() {
         // Quick feedback toast
         toast({
           title: "Photo Captured",
-          description: "Processing image...",
+          description: "Starting AI analysis pipeline...",
           duration: 1500,
         });
         
         // Freeze the image by showing it as a still
         setCapturedPhoto(true);
         
-        // Keep the frozen image visible for a longer time (5-6 seconds)
+        // Stage 1: Object Detection (3 seconds)
+        // Keep the frozen image visible for a longer time (12 seconds total)
         // This makes it feel more realistic - like the AI is taking its time to analyze
         setTimeout(() => {
-          // First analysis toast after 3 seconds
+          // First analysis toast
           toast({
-            title: "Analyzing Image",
-            description: "Extracting product features and dimensions...",
+            title: "Stage 1: Object Detection",
+            description: "Identifying product boundaries and labels...",
             duration: 2500,
           });
           
-          // Second analysis toast after another delay
+          // Stage 2: Content Analysis (3 seconds later)
           setTimeout(() => {
+            // Update AI processing state to stage 2
+            setCurrentAIState('stage2');
+            
             toast({
-              title: "Processing Product Details",
-              description: "Identifying brand and nutritional information...",
+              title: "Stage 2: Content Analysis",
+              description: "Extracting nutritional info and brand identity...",
               duration: 3000,
             });
             
@@ -446,42 +453,57 @@ export default function GroceryScanner() {
             const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
             const scannedItem = groceryDatabase[randomIndex];
             
-            // Price analysis toast
+            // Stage 3: Price Comparison (3 seconds later)
             setTimeout(() => {
+              // Update AI processing state to stage 3
+              setCurrentAIState('stage3');
+              
               toast({
-                title: "Checking Prices",
-                description: "Comparing prices across 8 nearby stores...",
+                title: "Stage 3: Price Analysis",
+                description: "Comparing with 120+ stores in your area...",
                 duration: 2500,
               });
               
-              // Final results after all analysis is complete
+              // Stage 4: Final Results (3 seconds later)
               setTimeout(() => {
-                if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
-                  toast({
-                    title: `${scannedItem.name} Identified!`,
-                    description: `Found ${scannedItem.alternatives.length} ways to save up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
-                    duration: 3000,
-                  });
-                }
+                // Update AI processing state to final stage
+                setCurrentAIState('stage4');
                 
-                // Save the product with the actual photo we captured
-                const enhancedScannedItem = {
-                  ...scannedItem,
-                  capturedPhotoUrl: photoUrl,
-                  showCapturedPhoto: true
-                };
+                toast({
+                  title: "Stage 4: AI Recommendations",
+                  description: "Generating personalized savings options...",
+                  duration: 2000,
+                });
                 
-                // Add to list and show as just scanned
-                setScannedItems([...scannedItems, enhancedScannedItem]);
-                setJustScanned(enhancedScannedItem);
-                
-                // Reset scan states
-                setIsScanning(false);
-                setCapturedPhoto(false);
+                // Final results after all analysis is complete
+                setTimeout(() => {
+                  if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
+                    toast({
+                      title: `${scannedItem.name} Identified!`,
+                      description: `Found ${scannedItem.alternatives.length} ways to save up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
+                      duration: 3000,
+                    });
+                  }
+                  
+                  // Save the product with the actual photo we captured
+                  const enhancedScannedItem = {
+                    ...scannedItem,
+                    capturedPhotoUrl: photoUrl,
+                    showCapturedPhoto: true
+                  };
+                  
+                  // Add to list and show as just scanned
+                  setScannedItems([...scannedItems, enhancedScannedItem]);
+                  setJustScanned(enhancedScannedItem);
+                  
+                  // Reset scan states
+                  setIsScanning(false);
+                  setCapturedPhoto(false);
+                }, 2500);
               }, 3000);
             }, 3000);
           }, 2500);
-        }, 3000);
+        }, 2000);
       } else {
         // If photo capture failed
         toast({
@@ -591,31 +613,43 @@ export default function GroceryScanner() {
                     {isScanning && (
                       <>
                         <div className="animate-scanner" />
-                        {/* Camera flash animation */}
-                        <div className="absolute inset-0 bg-white opacity-0 animate-camera-flash" />
+                        {/* Camera flash animation - enhanced with stronger flash effect */}
+                        <div className="absolute inset-0 bg-white opacity-0 animate-camera-flash z-50" />
                         
                         {/* Photo captured freeze frame overlay */}
                         {capturedPhoto && (
                           <>
-                            {/* Show the actual captured photo instead of the live video feed */}
+                            {/* Show the actual captured photo instead of the live video feed - enhanced for better visibility */}
                             {capturedPhotoUrl && (
-                              <div className="absolute inset-0">
+                              <div className="absolute inset-0 z-40">
+                                {/* Slight shadow around the edges to make the frozen frame stand out */}
+                                <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
+                                
                                 <img 
                                   src={capturedPhotoUrl} 
                                   alt="Captured product" 
                                   className="w-full h-full object-cover"
                                 />
                                 
+                                {/* Subtle overlay to make detection boxes more visible */}
+                                <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-black/10 via-transparent to-black/5"></div>
+                                
                                 {/* Add AI detection boxes over the frozen image */}
                                 <div className="absolute inset-0">
                                   {/* Main product detection box */}
                                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                    <div className="h-32 w-32 border-2 border-blue-500 rounded-sm animate-pulse-slow">
-                                      {/* Corner markers */}
-                                      <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-blue-500"></div>
-                                      <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-blue-500"></div>
-                                      <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-blue-500"></div>
-                                      <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-blue-500"></div>
+                                    <div className="h-32 w-32 border-2 border-blue-500 rounded-sm animate-pulse-slow shadow-[0_0_5px_rgba(59,130,246,0.5)]">
+                                      {/* Corner markers with enhanced visibility */}
+                                      <div className="absolute -top-1 -left-1 w-3.5 h-3.5 border-t-2 border-l-2 border-blue-500"></div>
+                                      <div className="absolute -top-1 -right-1 w-3.5 h-3.5 border-t-2 border-r-2 border-blue-500"></div>
+                                      <div className="absolute -bottom-1 -left-1 w-3.5 h-3.5 border-b-2 border-l-2 border-blue-500"></div>
+                                      <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 border-b-2 border-r-2 border-blue-500"></div>
+                                      
+                                      {/* Target cross in the middle */}
+                                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                        <div className="w-6 h-px bg-blue-400 opacity-70"></div>
+                                        <div className="h-6 w-px bg-blue-400 opacity-70 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                                      </div>
                                     </div>
                                     <div className="absolute -top-8 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded">
                                       <span className="flex items-center whitespace-nowrap">
@@ -625,20 +659,32 @@ export default function GroceryScanner() {
                                     </div>
                                   </div>
                                   
-                                  {/* Nutritional info detection */}
-                                  <div className="absolute bottom-1/4 right-1/4 h-16 w-24 border border-yellow-400 rounded-sm">
-                                    <div className="absolute -top-6 left-0 bg-yellow-500 bg-opacity-80 text-white text-xs px-2 py-0.5 rounded">
+                                  {/* Nutritional info detection - enhanced with animation */}
+                                  <div className="absolute bottom-1/4 right-1/4 h-16 w-24 border border-yellow-400 rounded-sm animate-pulse-slow shadow-[0_0_5px_rgba(234,179,8,0.3)]" style={{animationDelay: '0.7s'}}>
+                                    <div className="absolute -top-6 left-0 bg-yellow-500 bg-opacity-80 text-white text-xs px-2 py-0.5 rounded shadow-sm">
                                       <span className="flex items-center whitespace-nowrap">
+                                        <span className="w-1.5 h-1.5 bg-white rounded-full mr-1 animate-pulse"></span>
                                         Nutrition Facts
                                       </span>
                                     </div>
                                   </div>
                                   
-                                  {/* Barcode detection */}
-                                  <div className="absolute top-2/3 left-1/4 h-10 w-16 border border-green-400 rounded-sm">
-                                    <div className="absolute -top-6 left-0 bg-green-500 bg-opacity-80 text-white text-xs px-2 py-0.5 rounded">
+                                  {/* Barcode detection - enhanced with animation */}
+                                  <div className="absolute top-2/3 left-1/4 h-10 w-16 border border-green-400 rounded-sm animate-pulse-slow shadow-[0_0_5px_rgba(74,222,128,0.3)]" style={{animationDelay: '1.2s'}}>
+                                    <div className="absolute -top-6 left-0 bg-green-500 bg-opacity-80 text-white text-xs px-2 py-0.5 rounded shadow-sm">
                                       <span className="flex items-center whitespace-nowrap">
+                                        <span className="w-1.5 h-1.5 bg-white rounded-full mr-1 animate-pulse"></span>
                                         UPC Code
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Brand detection area - new addition */}
+                                  <div className="absolute top-1/4 right-1/3 h-8 w-20 border border-purple-400 rounded-sm animate-pulse-slow shadow-[0_0_5px_rgba(192,132,252,0.3)]" style={{animationDelay: '1.8s'}}>
+                                    <div className="absolute -top-6 right-0 bg-purple-500 bg-opacity-80 text-white text-xs px-2 py-0.5 rounded shadow-sm">
+                                      <span className="flex items-center whitespace-nowrap">
+                                        <span className="w-1.5 h-1.5 bg-white rounded-full mr-1 animate-pulse"></span>
+                                        Brand ID
                                       </span>
                                     </div>
                                   </div>
@@ -700,13 +746,32 @@ export default function GroceryScanner() {
                           <div className="animate-pulse-border flex items-center justify-center h-24 w-64 bg-primary bg-opacity-20 rounded-lg">
                             <div className="flex flex-col items-center">
                               <div className="text-white font-medium mb-1">
-                                <span className="inline-block animate-typing-cursor">Processing image</span>
+                                <span className="inline-block animate-typing-cursor">{
+                                  currentAIState === 'stage1' ? 'Processing image...' :
+                                  currentAIState === 'stage2' ? 'Analyzing contents...' :
+                                  currentAIState === 'stage3' ? 'Comparing prices...' :
+                                  'Finalizing results...'
+                                }</span>
                               </div>
                               <div className="text-xs text-white mb-2">
-                                Detecting brand, price & nutritional info
+                                {currentAIState === 'stage1' ? 'Detecting object boundaries and labels' :
+                                 currentAIState === 'stage2' ? 'Identifying brand, nutrition & pricing' :
+                                 currentAIState === 'stage3' ? 'Finding better alternatives for you' :
+                                 'Creating personalized recommendations'}
                               </div>
                               <div className="w-40 h-1.5 bg-white bg-opacity-20 rounded-full overflow-hidden">
                                 <div className="h-full bg-white animate-progress-linear"></div>
+                              </div>
+                              
+                              {/* AI confidence indicators */}
+                              <div className="flex justify-between w-40 mt-1">
+                                <span className="text-[10px] text-white opacity-80">Accuracy: {
+                                  currentAIState === 'stage1' ? '78%' :
+                                  currentAIState === 'stage2' ? '86%' :
+                                  currentAIState === 'stage3' ? '92%' :
+                                  '97%'
+                                }</span>
+                                <span className="text-[10px] text-white opacity-80">Model: VisionAI v2.4</span>
                               </div>
                             </div>
                           </div>
