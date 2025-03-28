@@ -171,19 +171,22 @@
     to { opacity: 1; transform: translateY(0); }
   }
   
-  /* Camera Flash Animation - Enhanced */
+  /* Camera Flash Animation - Enhanced with brighter flash */
   @keyframes camera-flash {
     0% { opacity: 0; }
     5% { opacity: 1; } /* Full brightness at start */
+    10% { opacity: 0.9; }
     15% { opacity: 0.8; }
-    25% { opacity: 0.4; }
-    40% { opacity: 0; }
+    25% { opacity: 0.6; }
+    40% { opacity: 0.3; }
+    60% { opacity: 0.1; }
     100% { opacity: 0; }
   }
 
   .animate-camera-flash {
-    animation: camera-flash 0.7s cubic-bezier(0.11, 0, 0.5, 0) forwards;
+    animation: camera-flash 1s cubic-bezier(0.11, 0, 0.5, 0) forwards;
     z-index: 50; /* Make sure flash appears above other elements */
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0.9) 60%, rgba(255, 255, 255, 0.7) 100%);
   }
 
   /* Typing cursor animation */
@@ -198,15 +201,18 @@
     animation: typing-cursor 1s step-end infinite;
   }
   
-  /* Slow pulse for target detection */
+  /* Slow pulse for target detection - enhanced for more noticeable effect */
   @keyframes pulse-slow {
-    0% { opacity: 0.2; }
-    50% { opacity: 0.6; }
-    100% { opacity: 0.2; }
+    0% { opacity: 0.25; transform: scale(0.96); }
+    20% { opacity: 0.35; }
+    50% { opacity: 0.7; transform: scale(1.04); }
+    80% { opacity: 0.35; }
+    100% { opacity: 0.25; transform: scale(0.96); }
   }
 
   .animate-pulse-slow {
-    animation: pulse-slow 3s ease-in-out infinite;
+    animation: pulse-slow 4s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
   }
   
   /* Scanner Animations */
@@ -264,16 +270,23 @@
     animation: blink 3s ease-in-out infinite;
   }
   
-  /* Linear progress bar animation */
+  /* Linear progress bar animation - enhanced for longer AI processing effect */
   @keyframes progress-linear {
     0% { width: 0%; }
-    50% { width: 70%; }
-    80% { width: 90%; }
+    10% { width: 15%; }
+    20% { width: 25%; }
+    40% { width: 40%; }
+    60% { width: 55%; }
+    70% { width: 65%; }
+    80% { width: 80%; }
+    90% { width: 90%; }
+    98% { width: 98%; }
     100% { width: 100%; }
   }
   
   .animate-progress-linear {
-    animation: progress-linear 3s forwards;
+    animation: progress-linear 10s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 1) 100%);
   }
   
   /* FadeIn animation for scanner elements */

@@ -424,47 +424,64 @@ export default function GroceryScanner() {
         // Freeze the image by showing it as a still
         setCapturedPhoto(true);
         
-        // Keep the frozen image visible for 2 seconds
-        // This makes it feel realistic - like the camera took a photo and is analyzing it
+        // Keep the frozen image visible for a longer time (5-6 seconds)
+        // This makes it feel more realistic - like the AI is taking its time to analyze
         setTimeout(() => {
-          // After the freeze period, start the quick AI analysis animations
+          // First analysis toast after 3 seconds
           toast({
-            title: "Analyzing Product",
-            description: "Identifying brand and features...",
-            duration: 2000,
+            title: "Analyzing Image",
+            description: "Extracting product features and dimensions...",
+            duration: 2500,
           });
           
-          // Then pick a random product from our database to "find"
-          const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
-          const scannedItem = groceryDatabase[randomIndex];
-          
-          // After a short delay show the results - total process takes about 5-6 seconds
-          // which feels more realistic for a computer vision task
+          // Second analysis toast after another delay
           setTimeout(() => {
-            if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
+            toast({
+              title: "Processing Product Details",
+              description: "Identifying brand and nutritional information...",
+              duration: 3000,
+            });
+            
+            // Pick a random product to "find"
+            const randomIndex = Math.floor(Math.random() * groceryDatabase.length);
+            const scannedItem = groceryDatabase[randomIndex];
+            
+            // Price analysis toast
+            setTimeout(() => {
               toast({
-                title: `${scannedItem.name} Identified!`,
-                description: `Found ${scannedItem.alternatives.length} ways to save up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
-                duration: 3000,
+                title: "Checking Prices",
+                description: "Comparing prices across 8 nearby stores...",
+                duration: 2500,
               });
-            }
-            
-            // Save the actual photo we took with the product
-            const enhancedScannedItem = {
-              ...scannedItem,
-              capturedPhotoUrl: photoUrl, // Store the actual photo that was taken
-              showCapturedPhoto: true // Flag to indicate we should show the real photo
-            };
-            
-            // Add to list and show as just scanned
-            setScannedItems([...scannedItems, enhancedScannedItem]);
-            setJustScanned(enhancedScannedItem);
-            
-            // Reset scan states
-            setIsScanning(false);
-            setCapturedPhoto(false);
-          }, 3000);
-        }, 2000); // 2 second freeze frame for realism
+              
+              // Final results after all analysis is complete
+              setTimeout(() => {
+                if (scannedItem.alternatives && scannedItem.alternatives.length > 0) {
+                  toast({
+                    title: `${scannedItem.name} Identified!`,
+                    description: `Found ${scannedItem.alternatives.length} ways to save up to $${(scannedItem.price - scannedItem.alternatives[0].price).toFixed(2)}`,
+                    duration: 3000,
+                  });
+                }
+                
+                // Save the product with the actual photo we captured
+                const enhancedScannedItem = {
+                  ...scannedItem,
+                  capturedPhotoUrl: photoUrl,
+                  showCapturedPhoto: true
+                };
+                
+                // Add to list and show as just scanned
+                setScannedItems([...scannedItems, enhancedScannedItem]);
+                setJustScanned(enhancedScannedItem);
+                
+                // Reset scan states
+                setIsScanning(false);
+                setCapturedPhoto(false);
+              }, 3000);
+            }, 3000);
+          }, 2500);
+        }, 3000);
       } else {
         // If photo capture failed
         toast({
