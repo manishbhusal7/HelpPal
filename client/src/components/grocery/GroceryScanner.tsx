@@ -456,35 +456,60 @@ export default function GroceryScanner() {
     // Reset scan progress
     setScanProgress(0);
     
-    // Start progress animation - focus on a 5-second total scanning time
-    const totalScanTime = 5000; // Total scan time of 5 seconds
+    // Start progress animation - with a more realistic, gradually accelerating effect
+    const totalScanTime = 18000; // Extend total scan animation time to 18 seconds
     const progressUpdateInterval = 100; // Update progress every 100ms for smoother animation
     
-    // Create two phases - slow to 80%, then faster for the remaining 19%
+    // Create three phases for more natural scanning behavior:
+    // 1. Very slow initial startup (0-20% in first 8 seconds)
+    // 2. Medium speed middle phase (20-70% in next 8 seconds)
+    // 3. Slightly faster final phase (70-99% in final 2 seconds)
     // We'll save the final 1% for the completion callback
-    const slowPhaseTarget = 80; // Progress slowly to 80%
-    const slowPhaseTime = 4000; // Take 4 seconds to reach 80%
-    const fastPhaseTime = totalScanTime - slowPhaseTime; // 1 second for the remaining progress
+    
+    const phase1Target = 20; // Progress slowly to 20%
+    const phase1Time = 8000; // Take 8 seconds for initial phase
+    
+    const phase2Target = 70; // Progress to 70% by end of middle phase
+    const phase2Time = 8000; // 8 seconds for middle phase
+    
+    const phase3Target = 99; // Progress to 99% by end (save final 1% for completion)
+    const phase3Time = 2000; // 2 seconds for final phase
     
     // Calculate increments for each phase
-    const slowIncrement = slowPhaseTarget / (slowPhaseTime / progressUpdateInterval);
-    const fastIncrement = 19 / (fastPhaseTime / progressUpdateInterval); // Remaining 19% in the final second
+    const phase1Increment = phase1Target / (phase1Time / progressUpdateInterval);
+    const phase2Increment = (phase2Target - phase1Target) / (phase2Time / progressUpdateInterval);
+    const phase3Increment = (phase3Target - phase2Target) / (phase3Time / progressUpdateInterval);
     
-    // Progress animation interval - two phases with different speeds
-    let inSlowPhase = true;
+    // Progress animation interval - three phases with different speeds
+    // Track current phase (1, 2, or 3)
+    let currentPhase = 1;
     const startTime = Date.now();
     
     const progressInterval = setInterval(() => {
       const elapsedTime = Date.now() - startTime;
       
-      // Check if we should transition to the fast phase
-      if (inSlowPhase && elapsedTime >= slowPhaseTime) {
-        inSlowPhase = false;
+      // Check for phase transitions
+      if (currentPhase === 1 && elapsedTime >= phase1Time) {
+        currentPhase = 2;
+      } else if (currentPhase === 2 && elapsedTime >= (phase1Time + phase2Time)) {
+        currentPhase = 3;
       }
       
       setScanProgress(prev => {
-        // Use different increment rates based on the phase
-        const increment = inSlowPhase ? slowIncrement : fastIncrement;
+        // Use different increment rates based on the current phase
+        let increment;
+        
+        if (currentPhase === 1) {
+          // Very slow initial phase
+          increment = phase1Increment;
+        } else if (currentPhase === 2) {
+          // Medium speed middle phase
+          increment = phase2Increment;
+        } else {
+          // Faster final phase
+          increment = phase3Increment;
+        }
+        
         const newProgress = Math.min(prev + increment, 99); // Cap at 99% until completion
         return newProgress;
       });
